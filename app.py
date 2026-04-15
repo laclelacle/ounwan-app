@@ -91,7 +91,7 @@ else:
             sohyeon_count = len(week_df[week_df['name'] == "소현"])
             
             # 요약 메시지 출력
-            st.info(f"📊 **이번 주 인증 현황**\n\n🦖 **가은**: {gaeun_count}회 인증  |  🐣 **소현**: {sohyeon_count}회 인증")
+            st.info(f"📊 **이번 주 인증 현황**\n\n💎 **가은**: {gaeun_count}회 인증  |  🆑️ **소현**: {sohyeon_count}회 인증")
             
             # 주 3회 목표 달성 여부 간단 체크 (응원 멘트)
             if gaeun_count >= 3 and sohyeon_count >= 3:
@@ -110,7 +110,7 @@ else:
                 with st.expander(f"📅 {d_str} 기록 보기", expanded=is_day_expanded):
                     day_df = week_df[week_df['date'] == d]
                     for _, row in day_df.iterrows():
-                        icon = "💎" if row['name'] == "가은" else "🐣"
+                        icon = "💎" if row['name'] == "가은" else "🆑️"
                         with st.chat_message("user", avatar=icon):
                             st.write(f"**{row['name']}의 기록**")
                             if pd.notnull(row['image']) and row['image'] != "":

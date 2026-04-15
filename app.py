@@ -110,7 +110,7 @@ else:
                 with st.expander(f"📅 {d_str} 기록 보기", expanded=is_day_expanded):
                     day_df = week_df[week_df['date'] == d]
                     for _, row in day_df.iterrows():
-                        icon = "🦖" if row['name'] == "가은" else "🐣"
+                        icon = "💎" if row['name'] == "가은" else "🐣"
                         with st.chat_message("user", avatar=icon):
                             st.write(f"**{row['name']}의 기록**")
                             if pd.notnull(row['image']) and row['image'] != "":

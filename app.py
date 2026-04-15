@@ -95,7 +95,7 @@ else:
             
             # 주 3회 목표 달성 여부 간단 체크 (응원 멘트)
             if gaeun_count >= 3 and sohyeon_count >= 3:
-                st.write("🎉 **두 분 다 이번 주 목표 달성! 대단해요!**")
+                st.write("🎉 **둘 다 이번 주 목표 달성! 우리 쫌 하는듯!**")
             elif gaeun_count < 3 or sohyeon_count < 3:
                 st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
             

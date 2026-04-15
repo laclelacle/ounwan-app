@@ -15,7 +15,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def get_data():
     try:
         df = conn.read(ttl=0)
-        # 날짜 컬럼을 판다스 데이트타임 형식으로 변환 (계산을 위해)
+        # 날짜 컬럼을 판다스 데이트타임 형식으로 변환
         df['date'] = pd.to_datetime(df['date'])
         return df
     except:
@@ -49,7 +49,7 @@ with st.form("upload_form", clear_on_submit=True):
                 
                 new_row = pd.DataFrame([{
                     "name": user_name, 
-                    "date": date, # datetime 객체로 저장
+                    "date": pd.to_datetime(date), 
                     "image": encoded_img,
                     "comment": comment
                 }])
@@ -57,7 +57,7 @@ with st.form("upload_form", clear_on_submit=True):
                 updated_df = pd.concat([existing_data, new_row], ignore_index=True)
                 conn.update(data=updated_df)
                 
-                st.success("인증 완료! 주간 피드에 반영되었습니다 👏")
+                st.success("인증 완료! 피드에 즉시 반영되었습니다 👏")
                 st.rerun()
             except Exception as e:
                 st.error(f"업로드 중 오류가 발생했습니다: {e}")
@@ -66,43 +66,51 @@ with st.form("upload_form", clear_on_submit=True):
 
 st.divider()
 
-# 4. 🔥 주간별로 묶어서 보여주는 오운완 피드
+# 4. 🔥 계층형 오운완 피드 (주차 > 일자 > 기록)
 st.header("🗓️ 주간 오운완 리포트")
 
 if existing_data.empty or "name" not in existing_data.columns:
     st.info("아직 인증된 기록이 없습니다.")
 else:
-    # 데이터 정리: 날짜 기준으로 내림차순 정렬
+    # 데이터 정렬: 날짜 기준으로 내림차순 (최신 주차, 최신 날짜가 위로)
     df_sorted = existing_data.sort_values(by="date", ascending=False)
     
-    # 주차 계산 함수 (월요일 시작 기준)
+    # 주차 라벨 만드는 함수
     def get_week_label(d):
         monday = d - datetime.timedelta(days=d.weekday())
         sunday = monday + datetime.timedelta(days=6)
-        return f"{monday.strftime('%m/%d')} ~ {sunday.strftime('%m/%d')} 주차 기록"
+        return f"{monday.strftime('%m/%d')} ~ {sunday.strftime('%m/%d')} 기록"
 
-    # 주차별로 그룹화
+    # 주차별 그룹화
     df_sorted['week'] = df_sorted['date'].apply(get_week_label)
     weeks = df_sorted['week'].unique()
 
     for week in weeks:
-        # 최신 주차는 펼쳐두고, 지난 주차는 접어두기
+        # 최신 주차만 기본으로 펼쳐두기
         is_expanded = (week == weeks[0])
         
-        with st.expander(f"📂 {week}", expanded=is_expanded):
+        with st.expander(f"📁 {week}", expanded=is_expanded):
             week_df = df_sorted[df_sorted['week'] == week]
             
-            for _, row in week_df.iterrows():
-                # 개별 기록 컨테이너
-                with st.container():
-                    date_str = row['date'].strftime('%Y-%m-%d')
-                    st.subheader(f"✅ {date_str} - {row['name']}의 기록")
-                    
-                    if pd.notnull(row['image']) and row['image'] != "":
-                        try:
-                            st.image(base64.b64decode(row['image']), use_column_width=True)
-                        except:
-                            st.caption("⚠️ 이미지를 표시할 수 없습니다.")
-                    
-                    st.write(f"💬 {row['comment']}")
-                    st.markdown("---") # 기록 간 구분선
+            # 같은 주차 내에서 날짜별로 다시 묶기
+            dates_in_week = week_df['date'].unique()
+            
+            for d in dates_in_week:
+                # 날짜 표시
+                d_str = pd.to_datetime(d).strftime('%Y-%m-%d')
+                st.markdown(f"#### 📅 {d_str}")
+                
+                # 해당 날짜의 기록들 출력
+                day_df = week_df[week_df['date'] == d]
+                
+                # 가은, 소현 순서나 기록 순서대로 출력
+                for _, row in day_df.iterrows():
+                    with st.chat_message("user" if row['name'] == "가은" else "assistant"):
+                        st.write(f"**{row['name']}의 기록**")
+                        if pd.notnull(row['image']) and row['image'] != "":
+                            try:
+                                st.image(base64.b64decode(row['image']), use_column_width=True)
+                            except:
+                                st.caption("⚠️ 이미지를 불러올 수 없습니다.")
+                        st.write(f"💬 {row['comment']}")
+                st.write("") # 날짜 간 간격 조절

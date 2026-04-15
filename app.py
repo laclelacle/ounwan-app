@@ -15,7 +15,6 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def get_data():
     try:
         df = conn.read(ttl=0)
-        # 날짜 컬럼을 판다스 데이트타임 형식으로 변환
         df['date'] = pd.to_datetime(df['date'])
         return df
     except:
@@ -25,6 +24,7 @@ existing_data = get_data()
 
 st.title("💪 오늘의 운동 완료 인증")
 st.write("❗이번주 목표: 주 3일 30분 이상 운동완료❗")
+st.write("❗미인증시: 벌금 1000원 | 일요일 정산❗")
 st.write("❗미인증시: 벌금 1000원❗⭐매주 일요일 정산⭐")
 st.write("🚫생리, 경조사, 늦은 가족모임, 여행 제외🚫")
 
@@ -40,7 +40,6 @@ with st.form("upload_form", clear_on_submit=True):
     if submitted:
         if uploaded_file is not None:
             try:
-                # 사진 압축
                 img = Image.open(uploaded_file)
                 img = img.convert("RGB")
                 img.thumbnail((500, 500))
@@ -58,7 +57,7 @@ with st.form("upload_form", clear_on_submit=True):
                 updated_df = pd.concat([existing_data, new_row], ignore_index=True)
                 conn.update(data=updated_df)
                 
-                st.success("인증 완료! 피드가 업데이트되었습니다 👏")
+                st.success("인증 완료! 주간 리포트를 확인해 보세요 👏")
                 st.rerun()
             except Exception as e:
                 st.error(f"업로드 중 오류가 발생했습니다: {e}")
@@ -67,13 +66,12 @@ with st.form("upload_form", clear_on_submit=True):
 
 st.divider()
 
-# 4. 🔥 이중 접기 피드 (주차별 접기 > 일자별 접기)
+# 4. 🔥 주간별 요약 기능이 추가된 오운완 피드
 st.header("🗓️ 주간 오운완 리포트")
 
 if existing_data.empty or "name" not in existing_data.columns:
     st.info("아직 인증된 기록이 없습니다.")
 else:
-    # 데이터 정렬: 최신순
     df_sorted = existing_data.sort_values(by="date", ascending=False)
     
     def get_week_label(d):
@@ -85,23 +83,33 @@ else:
     weeks = df_sorted['week'].unique()
 
     for i, week in enumerate(weeks):
-        # 1단계: 주차별 접기 (최신 주차만 기본으로 열어둠)
         with st.expander(f"📁 {week}", expanded=(i == 0)):
             week_df = df_sorted[df_sorted['week'] == week]
-            dates_in_week = week_df['date'].unique()
             
+            # 💡 [추가된 기능] 이번 주 인원별 인증 횟수 계산
+            gaeun_count = len(week_df[week_df['name'] == "가은"])
+            sohyeon_count = len(week_df[week_df['name'] == "소현"])
+            
+            # 요약 메시지 출력
+            st.info(f"📊 **이번 주 인증 현황**\n\n🦖 **가은**: {gaeun_count}회 인증  |  🐣 **소현**: {sohyeon_count}회 인증")
+            
+            # 주 3회 목표 달성 여부 간단 체크 (응원 멘트)
+            if gaeun_count >= 3 and sohyeon_count >= 3:
+                st.write("🎉 **두 분 다 이번 주 목표 달성! 대단해요!**")
+            elif gaeun_count < 3 or sohyeon_count < 3:
+                st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
+            
+            st.divider()
+
+            # 일자별 접기
+            dates_in_week = week_df['date'].unique()
             for j, d in enumerate(dates_in_week):
                 d_str = pd.to_datetime(d).strftime('%Y-%m-%d')
-                
-                # 2단계: 일자별 접기 (최신 날짜만 기본으로 열어둠)
-                # i==0(최신주차)이면서 j==0(최신날짜)일 때만 열려있게 설정
                 is_day_expanded = (i == 0 and j == 0)
                 
                 with st.expander(f"📅 {d_str} 기록 보기", expanded=is_day_expanded):
                     day_df = week_df[week_df['date'] == d]
-                    
                     for _, row in day_df.iterrows():
-                        # 가은/소현 구분 아이콘
                         icon = "🦖" if row['name'] == "가은" else "🐣"
                         with st.chat_message("user", avatar=icon):
                             st.write(f"**{row['name']}의 기록**")

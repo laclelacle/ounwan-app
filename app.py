@@ -34,7 +34,7 @@ with st.form("upload_form", clear_on_submit=True):
     user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"])
     date = st.date_input("날짜", datetime.date.today())
     uploaded_file = st.file_uploader("인증 사진을 올려주세요 📸", type=["jpg", "jpeg", "png"])
-    comment = st.text_area("오늘 운동 소감🔥")
+    comment = st.text_area("오늘 운동🔥(예: 땅끄부부 칼소폭 30분 / 탄천 걷기 30분)")
     submitted = st.form_submit_button("인증 완료!")
 
     if submitted:

@@ -15,6 +15,8 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def get_data():
     try:
         df = conn.read(ttl=0)
+        if df.empty:
+            return pd.DataFrame(columns=["name", "date", "image", "comment"])
         df['date'] = pd.to_datetime(df['date'])
         return df
     except:
@@ -45,17 +47,17 @@ with st.form("upload_form", clear_on_submit=True):
                 buffer = io.BytesIO()
                 img.save(buffer, format="JPEG", quality=60)
                 encoded_img = base64.b64encode(buffer.getvalue()).decode()
-                
+
                 new_row = pd.DataFrame([{
-                    "name": user_name, 
-                    "date": pd.to_datetime(date), 
+                    "name": user_name,
+                    "date": pd.to_datetime(date),
                     "image": encoded_img,
                     "comment": comment
                 }])
-                
+
                 updated_df = pd.concat([existing_data, new_row], ignore_index=True)
                 conn.update(data=updated_df)
-                
+
                 st.success("인증 완료! 주간 리포트를 확인해 보세요 👏")
                 st.rerun()
             except Exception as e:
@@ -65,14 +67,15 @@ with st.form("upload_form", clear_on_submit=True):
 
 st.divider()
 
-# 4. 🔥 주간별 요약 기능이 추가된 오운완 피드
+# 4. 주간별 요약 기능 + 삭제 기능 포함 피드
 st.header("🗓️ 주간 오운완 리포트")
 
 if existing_data.empty or "name" not in existing_data.columns:
     st.info("아직 인증된 기록이 없습니다.")
 else:
-    df_sorted = existing_data.sort_values(by="date", ascending=False)
-    
+    # 원본 인덱스를 유지한 채 정렬
+    df_sorted = existing_data.sort_values(by="date", ascending=False).copy()
+
     def get_week_label(d):
         monday = d - datetime.timedelta(days=d.weekday())
         sunday = monday + datetime.timedelta(days=6)
@@ -84,37 +87,46 @@ else:
     for i, week in enumerate(weeks):
         with st.expander(f"📁 {week}", expanded=(i == 0)):
             week_df = df_sorted[df_sorted['week'] == week]
-            
-            # 💡 [추가된 기능] 이번 주 인원별 인증 횟수 계산
+
             gaeun_count = len(week_df[week_df['name'] == "가은"])
             sohyeon_count = len(week_df[week_df['name'] == "소현"])
-            
-            # 요약 메시지 출력
+
             st.info(f"📊 **이번 주 인증 현황**\n\n💎 **가은**: {gaeun_count}회 인증  |  🆑️ **소현**: {sohyeon_count}회 인증")
-            
-            # 주 3회 목표 달성 여부 간단 체크 (응원 멘트)
+
             if gaeun_count >= 3 and sohyeon_count >= 3:
                 st.write("🎉 **둘 다 이번 주 목표 달성! 우리 쫌 하는듯!**")
             elif gaeun_count < 3 or sohyeon_count < 3:
                 st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
-            
+
             st.divider()
 
-            # 일자별 접기
             dates_in_week = week_df['date'].unique()
             for j, d in enumerate(dates_in_week):
                 d_str = pd.to_datetime(d).strftime('%Y-%m-%d')
                 is_day_expanded = (i == 0 and j == 0)
-                
+
                 with st.expander(f"📅 {d_str} 기록 보기", expanded=is_day_expanded):
                     day_df = week_df[week_df['date'] == d]
-                    for _, row in day_df.iterrows():
+
+                    for idx, row in day_df.iterrows():
                         icon = "💎" if row['name'] == "가은" else "🆑️"
                         with st.chat_message("user", avatar=icon):
                             st.write(f"**{row['name']}의 기록**")
+
                             if pd.notnull(row['image']) and row['image'] != "":
                                 try:
-                                    st.image(base64.b64decode(row['image']), use_column_width=True)
+                                    st.image(base64.b64decode(row['image']), use_container_width=True)
                                 except:
                                     st.caption("⚠️ 이미지를 불러올 수 없습니다.")
+
                             st.write(f"💬 {row['comment']}")
+
+                            # 삭제 버튼
+                            if st.button("🗑️ 이 기록 삭제", key=f"delete_{idx}"):
+                                try:
+                                    deleted_df = existing_data.drop(index=idx).reset_index(drop=True)
+                                    conn.update(data=deleted_df)
+                                    st.success("해당 기록이 삭제되었습니다.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"삭제 중 오류가 발생했습니다: {e}")

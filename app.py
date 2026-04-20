@@ -97,8 +97,22 @@ else:
                 st.write("🎉 **둘 다 이번 주 목표 달성! 우리 쫌 하는듯!**")
             elif gaeun_count < 3 or sohyeon_count < 3:
                 st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
-                st.subheader("🎧 오늘의 운동 추천 음악")
-                st.video("https://www.youtube.com/watch?v=ml6cT4AZdqI")
+                st.subheader("🎧 오늘의 운동 음악 공유")
+                music_url = st.text_input("🎵 음악 링크 넣기 (유튜브 / 스포티파이)")
+                if music_url:
+                    if "youtube" in music_url or "youtu.be" in music_url:
+                        st.video(music_url)
+                    elif "spotify" in music_url:
+                        import streamlit.components.v1 as components
+                        embed_url = music_url.replace("open.spotify.com", "open.spotify.com/embed")
+                        components.html(f"""
+                        <iframe src="{embed_url}"
+                        width="100%" height="152" frameborder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+                        </iframe>
+                        """, height=180)
+                    else:
+                    st.warning("유튜브 또는 스포티파이 링크만 넣어주세요!")
 
             st.divider()
 

@@ -18,12 +18,10 @@ def get_data():
     try:
         df = conn.read(ttl=0)
 
-        # 비어있을 경우 기본 컬럼 생성
         if df.empty:
-            return pd.DataFrame(columns=["name", "date", "image", "comment", "music_url"])
+            return pd.DataFrame(columns=["name", "date", "image", "comment"])
 
-        # 누락 컬럼 보정
-        expected_cols = ["name", "date", "image", "comment", "music_url"]
+        expected_cols = ["name", "date", "image", "comment"]
         for col in expected_cols:
             if col not in df.columns:
                 df[col] = ""
@@ -32,7 +30,7 @@ def get_data():
         return df[expected_cols]
 
     except:
-        return pd.DataFrame(columns=["name", "date", "image", "comment", "music_url"])
+        return pd.DataFrame(columns=["name", "date", "image", "comment"])
 
 existing_data = get_data()
 
@@ -50,7 +48,6 @@ with st.form("upload_form", clear_on_submit=True):
     date = st.date_input("날짜", datetime.date.today())
     uploaded_file = st.file_uploader("인증 사진 📸", type=["jpg", "jpeg", "png"])
     comment = st.text_area("오늘 운동🔥(예: 땅끄부부 칼소폭 30분 / 탄천 걷기 30분)")
-    music_url = st.text_input("🎵 운동하면서 들은 음악 링크 (유튜브 / 스포티파이)")
     submitted = st.form_submit_button("인증 완료!")
 
     if submitted:
@@ -68,8 +65,7 @@ with st.form("upload_form", clear_on_submit=True):
                     "name": user_name,
                     "date": pd.to_datetime(date),
                     "image": encoded_img,
-                    "comment": comment,
-                    "music_url": music_url.strip()
+                    "comment": comment
                 }])
 
                 updated_df = pd.concat([existing_data, new_row], ignore_index=True)
@@ -85,46 +81,7 @@ with st.form("upload_form", clear_on_submit=True):
 
 st.divider()
 
-# 6. 음악 링크 표시 함수
-def render_music_player(url):
-    if not url or str(url).strip() == "":
-        return
-
-    url = str(url).strip()
-
-    st.write("🎧 **운동할 때 들은 음악**")
-
-    # 유튜브
-    if "youtube.com" in url or "youtu.be" in url:
-        st.video(url)
-
-    # 스포티파이
-    elif "open.spotify.com" in url:
-        embed_url = url.replace("open.spotify.com/", "open.spotify.com/embed/")
-
-        # 쿼리스트링 제거 최소 보정
-        if "?" in embed_url:
-            embed_url = embed_url.split("?")[0]
-
-        components.html(
-            f"""
-            <iframe
-                src="{embed_url}"
-                width="100%"
-                height="152"
-                frameborder="0"
-                allowfullscreen=""
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
-            </iframe>
-            """,
-            height=180,
-        )
-
-    else:
-        st.caption("⚠️ 지원되지 않는 링크 형식입니다. 유튜브 또는 스포티파이 링크를 넣어주세요.")
-        st.markdown(f"[링크 열기]({url})")
-
-# 7. 주간 리포트
+# 6. 주간 리포트
 st.header("🗓️ 주간 오운완 리포트")
 
 if existing_data.empty or "name" not in existing_data.columns:
@@ -152,11 +109,46 @@ else:
                 f"💎 **가은**: {gaeun_count}회 인증  |  🆑️ **소현**: {sohyeon_count}회 인증"
             )
 
-            # 목표 달성 여부 메시지
+            # 목표 달성 여부 메시지 + 음악 추천 입력
             if gaeun_count >= 3 and sohyeon_count >= 3:
                 st.write("🎉 **둘 다 이번 주 목표 달성! 우리 쫌 하는듯!**")
             else:
                 st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
+
+                st.subheader("🎧 운동하면서 들을 음악")
+                music_url = st.text_input(
+                    "🎵 운동하면서 들은 음악 링크 (유튜브 / 스포티파이)",
+                    key=f"music_url_{i}"
+                )
+
+                if music_url:
+                    if "youtube.com" in music_url or "youtu.be" in music_url:
+                        st.video(music_url)
+
+                    elif "open.spotify.com" in music_url:
+                        embed_url = music_url.replace(
+                            "open.spotify.com/", "open.spotify.com/embed/"
+                        )
+
+                        if "?" in embed_url:
+                            embed_url = embed_url.split("?")[0]
+
+                        components.html(
+                            f"""
+                            <iframe
+                                src="{embed_url}"
+                                width="100%"
+                                height="152"
+                                frameborder="0"
+                                allowfullscreen=""
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+                            </iframe>
+                            """,
+                            height=180,
+                        )
+
+                    else:
+                        st.warning("유튜브 또는 스포티파이 링크만 넣어주세요!")
 
             st.divider()
 
@@ -175,20 +167,14 @@ else:
                         with st.chat_message("user", avatar=icon):
                             st.write(f"**{row['name']}의 기록**")
 
-                            # 이미지 출력
                             if pd.notnull(row["image"]) and row["image"] != "":
                                 try:
                                     st.image(base64.b64decode(row["image"]), use_container_width=True)
                                 except:
                                     st.caption("⚠️ 이미지를 불러올 수 없습니다.")
 
-                            # 운동 내용
                             if pd.notnull(row["comment"]) and row["comment"] != "":
                                 st.write(f"💬 {row['comment']}")
-
-                            # 음악 재생
-                            if pd.notnull(row["music_url"]) and str(row["music_url"]).strip() != "":
-                                render_music_player(row["music_url"])
 
                             # 삭제 버튼
                             if st.button("🗑️ 이 기록 삭제", key=f"delete_{idx}"):

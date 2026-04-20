@@ -97,6 +97,8 @@ else:
                 st.write("🎉 **둘 다 이번 주 목표 달성! 우리 쫌 하는듯!**")
             elif gaeun_count < 3 or sohyeon_count < 3:
                 st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
+                st.subheader("🎧 오늘의 운동 추천 음악")
+                st.video("https://www.youtube.com/watch?v=ml6cT4AZdqI")
 
             st.divider()
 

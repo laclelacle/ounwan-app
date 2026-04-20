@@ -187,7 +187,7 @@ else:
             else:
                 st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
 
-                st.subheader("🎧 운동하면서 들은 음악 올리기")
+                st.subheader("🎧 운동 중 추천 음악 올리기")
 
                 music_user = st.selectbox(
                     "누가 음악을 올리나요?",

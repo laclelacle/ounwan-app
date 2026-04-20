@@ -310,7 +310,7 @@ else:
                                     )
 
                                     edit_workout_url = st.text_input(
-                                        "🏠 홈트 유튜브 링크 수정",
+                                        "🏠💪 홈트 유튜브 링크 수정",
                                         value=str(row["workout_url"]) if pd.notnull(row["workout_url"]) else ""
                                     )
 

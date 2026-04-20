@@ -105,9 +105,9 @@ def render_workout_link(url):
     url = str(url).strip()
 
     if "youtube.com" in url or "youtu.be" in url:
-        st.markdown(f"🏠 [오늘 한 홈트 영상 보러가기]({url})")
+        st.markdown(f"🏠💪 [오늘 한 홈트 영상 보러가기]({url})")
     else:
-        st.markdown(f"🏠 [운동 링크 보기]({url})")
+        st.markdown(f"🏠💪 [운동 링크 보기]({url})")
 
 def encode_uploaded_image(uploaded_file):
     img = Image.open(uploaded_file)
@@ -132,7 +132,7 @@ with st.form("upload_form", clear_on_submit=True):
     date = st.date_input("날짜", datetime.date.today())
     uploaded_file = st.file_uploader("인증 사진 📸", type=["jpg", "jpeg", "png"])
     comment = st.text_area("오늘 운동🔥(예: 땅끄부부 칼소폭 30분 / 탄천 걷기 30분)")
-    workout_url = st.text_input("🏠 따라한 홈트 유튜브 링크 (선택)")
+    workout_url = st.text_input("🏠💪 따라한 홈트 유튜브 링크 (선택)")
     submitted = st.form_submit_button("인증 완료!")
 
     if submitted:

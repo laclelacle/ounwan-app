@@ -15,7 +15,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 # 3. 사용 시트 이름
 # ⚠️ 아래 RECORDS_WS는 네 기존 운동 기록이 들어있는 "실제 시트 탭 이름"으로 맞춰야 함
-RECORDS_WS = "운동기록"
+RECORDS_WS = "시트1"
 MUSIC_WS = "music_links"
 
 # 4. 운동 기록 불러오기

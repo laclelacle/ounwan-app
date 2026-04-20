@@ -180,7 +180,7 @@ else:
                 )
 
                 music_url = st.text_input(
-                    "🎵 운동하면서 들은 음악 링크 (유튜브 / 스포티파이)",
+                    "🎵 운동하면서 들은 음악 / 예능 링크 (유튜브 / 스포티파이)",
                     key=f"music_url_{i}",
                     placeholder="예: https://www.youtube.com/watch?v=... 또는 https://open.spotify.com/track/..."
                 )
@@ -212,7 +212,7 @@ else:
                 # 이 주차에 저장된 음악 기록 모아보기
                 week_music_df = music_data[music_data["week"] == week].copy()
 
-                with st.expander("📚 지금까지 올린 음악 링크 모아보기", expanded=False):
+                with st.expander("📚 지금까지 올린 음악 / 예능 링크 모아보기", expanded=False):
                     if week_music_df.empty:
                         st.info("아직 저장된 음악 링크가 없습니다.")
                     else:
@@ -225,14 +225,14 @@ else:
                             st.caption(m_row["music_url"])
                             render_music_player(m_row["music_url"])
 
-                            if st.button("🗑️ 이 음악 링크 삭제", key=f"delete_music_{i}_{m_idx}"):
+                            if st.button("🗑️ 이 음악 / 예능 링크 삭제", key=f"delete_music_{i}_{m_idx}"):
                                 try:
                                     deleted_music_df = music_data.drop(index=m_idx).reset_index(drop=True)
                                     conn.update(worksheet=MUSIC_WS, data=deleted_music_df)
-                                    st.success("음악 링크가 삭제되었습니다.")
+                                    st.success("음악 / 예능 링크가 삭제되었습니다.")
                                     st.rerun()
                                 except Exception as e:
-                                    st.error(f"음악 링크 삭제 중 오류가 발생했습니다: {e}")
+                                    st.error(f"음악 / 예능 링크 삭제 중 오류가 발생했습니다: {e}")
 
                             st.divider()
 

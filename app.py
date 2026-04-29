@@ -39,6 +39,10 @@ def encode_uploaded_image(uploaded_file):
     return base64.b64encode(buffer.getvalue()).decode()
 
 
+def combine_links(*links):
+    return "\n".join([link.strip() for link in links if link and link.strip() != ""])
+
+
 def split_links(text):
     if not text or str(text).strip() == "":
         return []
@@ -118,10 +122,10 @@ with left_col:
         date = st.date_input("날짜", datetime.date.today())
         uploaded_file = st.file_uploader("인증 사진 📸", type=["jpg", "jpeg", "png"])
         comment = st.text_area("오늘 운동🔥")
-        workout_urls = st.text_area(
-            "🏠💪 따라한 홈트 유튜브 링크들",
-            placeholder="여러 개일 경우 줄바꿈으로 입력"
-        )
+
+        workout_url_1 = st.text_input("🏠💪 홈트 유튜브 링크 1")
+        workout_url_2 = st.text_input("🏠💪 홈트 유튜브 링크 2")
+        workout_url_3 = st.text_input("🏠💪 홈트 유튜브 링크 3")
 
         submitted = st.form_submit_button("인증 완료!")
 
@@ -129,13 +133,14 @@ with left_col:
             if uploaded_file is not None:
                 try:
                     encoded_img = encode_uploaded_image(uploaded_file)
+                    workout_urls = combine_links(workout_url_1, workout_url_2, workout_url_3)
 
                     new_row = pd.DataFrame([{
                         "name": user_name,
                         "date": pd.to_datetime(date),
                         "image": encoded_img,
                         "comment": comment,
-                        "workout_urls": workout_urls.strip()
+                        "workout_urls": workout_urls
                     }])
 
                     updated_df = pd.concat([existing_data, new_row], ignore_index=True)
@@ -314,16 +319,28 @@ else:
                                 if st.session_state.editing_record_idx == idx:
                                     st.markdown("### ✏️ 기록 수정하기")
 
+                                    existing_links = split_links(row["workout_urls"])
+                                    existing_link_1 = existing_links[0] if len(existing_links) > 0 else ""
+                                    existing_link_2 = existing_links[1] if len(existing_links) > 1 else ""
+                                    existing_link_3 = existing_links[2] if len(existing_links) > 2 else ""
+
                                     with st.form(f"edit_form_{idx}"):
                                         edit_comment = st.text_area(
                                             "운동 내용 수정",
                                             value=str(row["comment"]) if pd.notnull(row["comment"]) else ""
                                         )
 
-                                        edit_workout_urls = st.text_area(
-                                            "🏠💪 홈트 유튜브 링크 수정",
-                                            value=str(row["workout_urls"]) if pd.notnull(row["workout_urls"]) else "",
-                                            placeholder="여러 개일 경우 줄바꿈으로 입력"
+                                        edit_workout_url_1 = st.text_input(
+                                            "🏠💪 홈트 유튜브 링크 1 수정",
+                                            value=existing_link_1
+                                        )
+                                        edit_workout_url_2 = st.text_input(
+                                            "🏠💪 홈트 유튜브 링크 2 수정",
+                                            value=existing_link_2
+                                        )
+                                        edit_workout_url_3 = st.text_input(
+                                            "🏠💪 홈트 유튜브 링크 3 수정",
+                                            value=existing_link_3
                                         )
 
                                         edit_uploaded_file = st.file_uploader(
@@ -339,7 +356,11 @@ else:
                                     if save_edit:
                                         updated_df = existing_data.copy()
                                         updated_df.at[idx, "comment"] = edit_comment.strip()
-                                        updated_df.at[idx, "workout_urls"] = edit_workout_urls.strip()
+                                        updated_df.at[idx, "workout_urls"] = combine_links(
+                                            edit_workout_url_1,
+                                            edit_workout_url_2,
+                                            edit_workout_url_3
+                                        )
 
                                         if edit_uploaded_file is not None:
                                             updated_df.at[idx, "image"] = encode_uploaded_image(edit_uploaded_file)

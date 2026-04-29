@@ -6,67 +6,55 @@ import base64
 from PIL import Image
 import io
 
-# 1. 페이지 설정
 st.set_page_config(page_title="오운완 인증💪", page_icon="🏋️‍♀️", layout="centered")
 
-# 2. 구글 시트 연결
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# 3. 사용 시트 이름
-RECORDS_WS = "시트1"          # 기존 운동 기록 시트 이름
-EXCEPTIONS_WS = "exceptions" # 인증 제외 주간 기록 시트 이름
+RECORDS_WS = "시트1"
+EXCEPTIONS_WS = "exceptions"
 
-# 4. 수정 상태 초기화
 if "editing_record_idx" not in st.session_state:
     st.session_state.editing_record_idx = None
 
-# 5. 공통 함수
+
 def get_week_label(d):
     d = pd.to_datetime(d)
     monday = d - datetime.timedelta(days=d.weekday())
     sunday = monday + datetime.timedelta(days=6)
     return f"{monday.strftime('%m/%d')} ~ {sunday.strftime('%m/%d')} 기록"
 
+
 def get_week_start(d):
     d = pd.to_datetime(d)
     monday = d - datetime.timedelta(days=d.weekday())
     return monday.strftime("%Y-%m-%d")
 
+
 def encode_uploaded_image(uploaded_file):
     img = Image.open(uploaded_file)
     img = img.convert("RGB")
     img.thumbnail((500, 500))
-
     buffer = io.BytesIO()
     img.save(buffer, format="JPEG", quality=60)
     return base64.b64encode(buffer.getvalue()).decode()
 
+
 def split_links(text):
     if not text or str(text).strip() == "":
         return []
+    return [line.strip() for line in str(text).splitlines() if line.strip()]
 
-    links = []
-    for line in str(text).splitlines():
-        line = line.strip()
-        if line:
-            links.append(line)
-    return links
 
 def render_workout_links(urls_text):
     links = split_links(urls_text)
-
-    if len(links) == 0:
+    if not links:
         return
 
     st.write("🏠💪 **따라한 홈트 영상**")
-
     for n, url in enumerate(links, start=1):
-        if "youtube.com" in url or "youtu.be" in url:
-            st.markdown(f"{n}. [홈트 영상 보러가기]({url})")
-        else:
-            st.markdown(f"{n}. [운동 링크 보기]({url})")
+        st.markdown(f"{n}. [홈트 영상 보러가기]({url})")
 
-# 6. 운동 기록 불러오기
+
 def get_records_data():
     try:
         df = conn.read(worksheet=RECORDS_WS, ttl=0)
@@ -74,7 +62,6 @@ def get_records_data():
         if df.empty:
             return pd.DataFrame(columns=["name", "date", "image", "comment", "workout_urls"])
 
-        # 기존 workout_url 컬럼 호환
         if "workout_urls" not in df.columns:
             if "workout_url" in df.columns:
                 df["workout_urls"] = df["workout_url"]
@@ -92,7 +79,7 @@ def get_records_data():
     except Exception:
         return pd.DataFrame(columns=["name", "date", "image", "comment", "workout_urls"])
 
-# 7. 인증 제외 기록 불러오기
+
 def get_exceptions_data():
     try:
         df = conn.read(worksheet=EXCEPTIONS_WS, ttl=0)
@@ -110,101 +97,102 @@ def get_exceptions_data():
     except Exception:
         return pd.DataFrame(columns=["name", "week", "reason", "memo"])
 
+
 existing_data = get_records_data()
 exceptions_data = get_exceptions_data()
 
-# 8. 제목 및 안내문
 st.title("💪 오늘의 운동 완료 인증")
 st.write("❗이번주 목표: 주 3일 30분 이상 운동완료❗")
 st.write("❗미인증시: 벌금 1000원❗⭐매주 일요일 정산⭐")
 st.write("🚫생리, 경조사, 늦은 가족모임, 여행, 병가 제외🚫")
 
-# 9. 인증 제외 주간 등록
-st.subheader("🚫 이번 주 인증 제외 등록")
-
-with st.form("exception_form", clear_on_submit=True):
-    exception_user = st.selectbox("누가 이번 주 인증 제외인가요?", ["가은", "소현"], key="exception_user")
-    exception_date = st.date_input("해당 주간 날짜 선택", datetime.date.today(), key="exception_date")
-    exception_reason = st.selectbox(
-        "사유",
-        ["생리", "경조사", "늦은 가족모임", "여행", "병가"],
-        key="exception_reason"
-    )
-    exception_memo = st.text_input("메모 (선택)", key="exception_memo")
-
-    exception_submitted = st.form_submit_button("이번 주 인증 제외 등록")
-
-    if exception_submitted:
-        week_key = get_week_start(exception_date)
-
-        already_exists = (
-            (exceptions_data["name"] == exception_user)
-            & (exceptions_data["week"] == week_key)
-        ).any()
-
-        if already_exists:
-            st.warning("이미 해당 주간에 인증 제외로 등록되어 있습니다.")
-        else:
-            new_exception = pd.DataFrame([{
-                "name": exception_user,
-                "week": week_key,
-                "reason": exception_reason,
-                "memo": exception_memo.strip()
-            }])
-
-            updated_exceptions = pd.concat([exceptions_data, new_exception], ignore_index=True)
-            conn.update(worksheet=EXCEPTIONS_WS, data=updated_exceptions)
-
-            st.success("이번 주 인증 제외가 등록되었습니다.")
-            st.rerun()
-
 st.divider()
 
-# 10. 인증 기록 입력 폼
-with st.form("upload_form", clear_on_submit=True):
-    st.header("오늘의 운동 인증하기")
+left_col, right_col = st.columns(2)
 
-    user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"])
-    date = st.date_input("날짜", datetime.date.today())
-    uploaded_file = st.file_uploader("인증 사진 📸", type=["jpg", "jpeg", "png"])
-    comment = st.text_area("오늘 운동🔥(예: 땅끄부부 칼소폭 30분 / 탄천 걷기 30분)")
-    workout_urls = st.text_area(
-        "🏠💪 따라한 홈트 유튜브 링크들 (선택)",
-        placeholder="링크를 여러 개 올릴 경우 줄바꿈으로 입력\n예:\nhttps://www.youtube.com/watch?v=...\nhttps://youtu.be/..."
-    )
+with left_col:
+    with st.form("upload_form", clear_on_submit=True):
+        st.header("오늘의 운동 인증하기")
 
-    submitted = st.form_submit_button("인증 완료!")
+        user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"])
+        date = st.date_input("날짜", datetime.date.today())
+        uploaded_file = st.file_uploader("인증 사진 📸", type=["jpg", "jpeg", "png"])
+        comment = st.text_area("오늘 운동🔥")
+        workout_urls = st.text_area(
+            "🏠💪 따라한 홈트 유튜브 링크들",
+            placeholder="여러 개일 경우 줄바꿈으로 입력"
+        )
 
-    if submitted:
-        if uploaded_file is not None:
-            try:
-                encoded_img = encode_uploaded_image(uploaded_file)
+        submitted = st.form_submit_button("인증 완료!")
 
-                new_row = pd.DataFrame([{
-                    "name": user_name,
-                    "date": pd.to_datetime(date),
-                    "image": encoded_img,
-                    "comment": comment,
-                    "workout_urls": workout_urls.strip()
+        if submitted:
+            if uploaded_file is not None:
+                try:
+                    encoded_img = encode_uploaded_image(uploaded_file)
+
+                    new_row = pd.DataFrame([{
+                        "name": user_name,
+                        "date": pd.to_datetime(date),
+                        "image": encoded_img,
+                        "comment": comment,
+                        "workout_urls": workout_urls.strip()
+                    }])
+
+                    updated_df = pd.concat([existing_data, new_row], ignore_index=True)
+                    conn.update(worksheet=RECORDS_WS, data=updated_df)
+
+                    st.success("인증 완료!")
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"업로드 중 오류가 발생했습니다: {e}")
+            else:
+                st.warning("사진을 꼭 업로드해주세요!")
+
+
+with right_col:
+    with st.form("exception_form", clear_on_submit=True):
+        st.header("🚫 인증 제외 등록")
+
+        exception_user = st.selectbox("누가 인증 제외인가요?", ["가은", "소현"], key="exception_user")
+        exception_date = st.date_input("해당 주간 날짜 선택", datetime.date.today(), key="exception_date")
+        exception_reason = st.selectbox(
+            "사유",
+            ["생리", "경조사", "늦은 가족모임", "여행", "병가"],
+            key="exception_reason"
+        )
+        exception_memo = st.text_input("메모", key="exception_memo")
+
+        exception_submitted = st.form_submit_button("인증 제외 등록")
+
+        if exception_submitted:
+            week_key = get_week_start(exception_date)
+
+            already_exists = (
+                (exceptions_data["name"] == exception_user)
+                & (exceptions_data["week"] == week_key)
+            ).any()
+
+            if already_exists:
+                st.warning("이미 해당 주간에 인증 제외로 등록되어 있습니다.")
+            else:
+                new_exception = pd.DataFrame([{
+                    "name": exception_user,
+                    "week": week_key,
+                    "reason": exception_reason,
+                    "memo": exception_memo.strip()
                 }])
 
-                updated_df = pd.concat([existing_data, new_row], ignore_index=True)
-                conn.update(worksheet=RECORDS_WS, data=updated_df)
+                updated_exceptions = pd.concat([exceptions_data, new_exception], ignore_index=True)
+                conn.update(worksheet=EXCEPTIONS_WS, data=updated_exceptions)
 
-                st.success("인증 완료! 주간 리포트를 확인해 보세요 👏")
+                st.success("인증 제외가 등록되었습니다.")
                 st.rerun()
-
-            except Exception as e:
-                st.error(f"업로드 중 오류가 발생했습니다: {e}")
-        else:
-            st.warning("사진을 꼭 업로드해주세요!")
 
 st.divider()
 
-# 11. 주간 오운완 리포트
 st.header("🗓️ 주간 오운완 리포트")
 
-# 주차 목록 만들기: 운동 기록 + 인증 제외 기록 둘 다 반영
 week_keys = set()
 
 if not existing_data.empty:
@@ -228,11 +216,12 @@ else:
         week_label = get_week_label(week_start)
 
         with st.expander(f"📁 {week_label}", expanded=(i == 0)):
-
             if not existing_data.empty:
                 df_sorted = existing_data.copy()
                 df_sorted["week_key"] = df_sorted["date"].apply(get_week_start)
-                week_df = df_sorted[df_sorted["week_key"] == week_key].sort_values(by="date", ascending=False)
+                week_df = df_sorted[df_sorted["week_key"] == week_key].sort_values(
+                    by="date", ascending=False
+                )
             else:
                 week_df = pd.DataFrame(columns=["name", "date", "image", "comment", "workout_urls", "week_key"])
 
@@ -242,7 +231,6 @@ else:
             sohyeon_count = len(week_df[week_df["name"] == "소현"])
 
             exempt_names = week_exceptions["name"].tolist()
-
             gaeun_exempt = "가은" in exempt_names
             sohyeon_exempt = "소현" in exempt_names
 
@@ -261,13 +249,10 @@ else:
                     st.write(f"- **{ex_row['name']}**: {ex_row['reason']}{memo_text}")
 
                     if st.button("인증 제외 취소", key=f"delete_exception_{i}_{ex_idx}"):
-                        try:
-                            updated_exceptions = exceptions_data.drop(index=ex_idx).reset_index(drop=True)
-                            conn.update(worksheet=EXCEPTIONS_WS, data=updated_exceptions)
-                            st.success("인증 제외 등록이 취소되었습니다.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"인증 제외 취소 중 오류가 발생했습니다: {e}")
+                        updated_exceptions = exceptions_data.drop(index=ex_idx).reset_index(drop=True)
+                        conn.update(worksheet=EXCEPTIONS_WS, data=updated_exceptions)
+                        st.success("인증 제외 등록이 취소되었습니다.")
+                        st.rerun()
 
             gaeun_done = gaeun_exempt or gaeun_count >= 3
             sohyeon_done = sohyeon_exempt or sohyeon_count >= 3
@@ -286,9 +271,8 @@ else:
 
                 for j, d in enumerate(dates_in_week):
                     d_str = pd.to_datetime(d).strftime("%Y-%m-%d")
-                    is_day_expanded = (i == 0 and j == 0)
 
-                    with st.expander(f"📅 {d_str} 기록 보기", expanded=is_day_expanded):
+                    with st.expander(f"📅 {d_str} 기록 보기", expanded=(i == 0 and j == 0)):
                         day_df = week_df[week_df["date"] == d]
 
                         for idx, row in day_df.iterrows():
@@ -318,19 +302,15 @@ else:
 
                                 with btn_col2:
                                     if st.button("🗑️ 이 기록 삭제", key=f"delete_record_{idx}"):
-                                        try:
-                                            deleted_df = existing_data.drop(index=idx).reset_index(drop=True)
-                                            conn.update(worksheet=RECORDS_WS, data=deleted_df)
+                                        deleted_df = existing_data.drop(index=idx).reset_index(drop=True)
+                                        conn.update(worksheet=RECORDS_WS, data=deleted_df)
 
-                                            if st.session_state.editing_record_idx == idx:
-                                                st.session_state.editing_record_idx = None
+                                        if st.session_state.editing_record_idx == idx:
+                                            st.session_state.editing_record_idx = None
 
-                                            st.success("해당 기록이 삭제되었습니다.")
-                                            st.rerun()
-                                        except Exception as e:
-                                            st.error(f"삭제 중 오류가 발생했습니다: {e}")
+                                        st.success("해당 기록이 삭제되었습니다.")
+                                        st.rerun()
 
-                                # 수정 폼
                                 if st.session_state.editing_record_idx == idx:
                                     st.markdown("### ✏️ 기록 수정하기")
 
@@ -347,34 +327,27 @@ else:
                                         )
 
                                         edit_uploaded_file = st.file_uploader(
-                                            "새 인증 사진으로 교체할까요? (선택)",
+                                            "새 인증 사진으로 교체",
                                             type=["jpg", "jpeg", "png"],
                                             key=f"edit_file_{idx}"
                                         )
 
                                         save_edit = st.form_submit_button("💾 수정 저장")
 
-                                    cancel_col1, cancel_col2 = st.columns([1, 4])
-                                    with cancel_col1:
-                                        cancel_edit = st.button("취소", key=f"cancel_edit_{idx}")
+                                    cancel_edit = st.button("취소", key=f"cancel_edit_{idx}")
 
                                     if save_edit:
-                                        try:
-                                            updated_df = existing_data.copy()
+                                        updated_df = existing_data.copy()
+                                        updated_df.at[idx, "comment"] = edit_comment.strip()
+                                        updated_df.at[idx, "workout_urls"] = edit_workout_urls.strip()
 
-                                            updated_df.at[idx, "comment"] = edit_comment.strip()
-                                            updated_df.at[idx, "workout_urls"] = edit_workout_urls.strip()
+                                        if edit_uploaded_file is not None:
+                                            updated_df.at[idx, "image"] = encode_uploaded_image(edit_uploaded_file)
 
-                                            if edit_uploaded_file is not None:
-                                                updated_df.at[idx, "image"] = encode_uploaded_image(edit_uploaded_file)
-
-                                            conn.update(worksheet=RECORDS_WS, data=updated_df)
-                                            st.session_state.editing_record_idx = None
-                                            st.success("기록이 수정되었습니다.")
-                                            st.rerun()
-
-                                        except Exception as e:
-                                            st.error(f"수정 중 오류가 발생했습니다: {e}")
+                                        conn.update(worksheet=RECORDS_WS, data=updated_df)
+                                        st.session_state.editing_record_idx = None
+                                        st.success("기록이 수정되었습니다.")
+                                        st.rerun()
 
                                     if cancel_edit:
                                         st.session_state.editing_record_idx = None

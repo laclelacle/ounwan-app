@@ -171,62 +171,59 @@ with left_col:
 
 
 with right_col:
-    with st.form("target_form", clear_on_submit=True):
-        st.header("🎯 주간 목표 조정")
+    st.header("🎯 주간 목표 조정")
 
-        target_user = st.selectbox(
-            "누구의 목표를 조정하나요?",
-            ["가은", "소현"],
-            key="target_user_select"
-        )
+    target_user = st.selectbox(
+        "누구의 목표를 조정하나요?",
+        ["가은", "소현"],
+        key="target_user_select"
+    )
 
-        target_date = st.date_input(
-            "해당 주간 날짜 선택",
-            datetime.date.today(),
-            key="target_date_input"
-        )
+    target_date = st.date_input(
+        "해당 주간 날짜 선택",
+        datetime.date.today(),
+        key="target_date_input"
+    )
 
-        target_count = st.selectbox(
-            "이번 주 목표 횟수",
-            options=[1, 2, 3],
-            index=3,
-            key="target_count_select"
-        )
+    target_count = st.selectbox(
+        "이번 주 목표 횟수",
+        options=[0, 1, 2, 3],
+        index=3,
+        key="target_count_select"
+    )
 
-        reason = st.selectbox(
-            "사유",
-            ["병가", "여행", "모임", "경조사", "생리", "기타"],
-            key="reason_select"
-        )
+    reason = st.selectbox(
+        "사유",
+        ["병가", "여행", "모임", "경조사", "생리", "기타"],
+        key="reason_select"
+    )
 
-        memo = st.text_input("메모", key="memo_input")
+    memo = st.text_input("메모", key="memo_input")
 
-        target_submitted = st.form_submit_button("목표 조정 등록")
+    if st.button("목표 조정 등록", key="target_submit_button"):
+        week_key = get_week_start(target_date)
 
-        if target_submitted:
-            week_key = get_week_start(target_date)
+        already_exists = (
+            (targets_data["name"] == target_user)
+            & (targets_data["week"] == week_key)
+        ).any()
 
-            already_exists = (
-                (targets_data["name"] == target_user)
-                & (targets_data["week"] == week_key)
-            ).any()
+        if already_exists:
+            st.warning("이미 해당 주간에 목표 조정이 등록되어 있습니다. 기존 항목을 취소하고 다시 등록해주세요.")
+        else:
+            new_target = pd.DataFrame([{
+                "name": target_user,
+                "week": week_key,
+                "target_count": target_count,
+                "reason": reason,
+                "memo": memo.strip()
+            }])
 
-            if already_exists:
-                st.warning("이미 해당 주간에 목표 조정이 등록되어 있습니다. 기존 항목을 취소하고 다시 등록해주세요.")
-            else:
-                new_target = pd.DataFrame([{
-                    "name": target_user,
-                    "week": week_key,
-                    "target_count": target_count,
-                    "reason": reason,
-                    "memo": memo.strip()
-                }])
+            updated_targets = pd.concat([targets_data, new_target], ignore_index=True)
+            conn.update(worksheet=EXCEPTIONS_WS, data=updated_targets)
 
-                updated_targets = pd.concat([targets_data, new_target], ignore_index=True)
-                conn.update(worksheet=EXCEPTIONS_WS, data=updated_targets)
-
-                st.success("목표 조정이 등록되었습니다.")
-                st.rerun()
+            st.success("목표 조정이 등록되었습니다.")
+            st.rerun()
 
 st.divider()
 

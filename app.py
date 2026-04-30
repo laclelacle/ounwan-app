@@ -59,6 +59,28 @@ def render_workout_links(urls_text):
         st.markdown(f"{n}. [홈트 영상 보러가기]({url})")
 
 
+def get_required_count(name, week_key, exceptions_data):
+    target_rows = exceptions_data[
+        (exceptions_data["name"] == name) &
+        (exceptions_data["week"] == week_key)
+    ]
+
+    if target_rows.empty:
+        return 3
+
+    row = target_rows.iloc[0]
+
+    if "target_count" not in row or str(row["target_count"]).strip() == "":
+        if str(row["type"]).strip() == "인증 제외":
+            return 0
+        return 3
+
+    try:
+        return int(row["target_count"])
+    except:
+        return 3
+
+
 def get_records_data():
     try:
         df = conn.read(worksheet=RECORDS_WS, ttl=0)
@@ -89,9 +111,9 @@ def get_exceptions_data():
         df = conn.read(worksheet=EXCEPTIONS_WS, ttl=0)
 
         if df.empty:
-            return pd.DataFrame(columns=["name", "week", "reason", "memo"])
+            return pd.DataFrame(columns=["name", "week", "type", "target_count", "reason", "memo"])
 
-        expected_cols = ["name", "week", "reason", "memo"]
+        expected_cols = ["name", "week", "type", "target_count", "reason", "memo"]
         for col in expected_cols:
             if col not in df.columns:
                 df[col] = ""
@@ -99,16 +121,16 @@ def get_exceptions_data():
         return df[expected_cols]
 
     except Exception:
-        return pd.DataFrame(columns=["name", "week", "reason", "memo"])
+        return pd.DataFrame(columns=["name", "week", "type", "target_count", "reason", "memo"])
 
 
 existing_data = get_records_data()
 exceptions_data = get_exceptions_data()
 
 st.title("💪 오늘의 운동 완료 인증")
-st.write("❗이번주 목표: 주 3일 30분 이상 운동완료❗")
+st.write("❗이번주 기본 목표: 주 3일 30분 이상 운동완료❗")
 st.write("❗미인증시: 벌금 1000원❗⭐매주 일요일 정산⭐")
-st.write("🚫생리, 경조사, 늦은 가족모임, 여행, 병가 제외🚫")
+st.write("🚫생리, 경조사, 늦은 가족모임, 여행, 병가, 몸살 제외/목표 조정 가능🚫")
 
 st.divider()
 
@@ -157,18 +179,39 @@ with left_col:
 
 with right_col:
     with st.form("exception_form", clear_on_submit=True):
-        st.header("🚫 인증 제외 등록")
+        st.header("🚫 인증 제외/목표 조정")
 
-        exception_user = st.selectbox("누가 인증 제외인가요?", ["가은", "소현"], key="exception_user")
+        exception_user = st.selectbox("누가 해당되나요?", ["가은", "소현"], key="exception_user")
         exception_date = st.date_input("해당 주간 날짜 선택", datetime.date.today(), key="exception_date")
-        exception_reason = st.selectbox(
-            "사유",
-            ["생리", "경조사", "늦은 가족모임", "여행", "병가"],
-            key="exception_reason"
+
+        exception_type = st.radio(
+            "처리 방식",
+            ["이번 주 인증 제외", "이번 주 목표 횟수 조정"],
+            key="exception_type"
         )
+
+        if exception_type == "이번 주 인증 제외":
+            target_count = 0
+            exception_reason = st.selectbox(
+                "사유",
+                ["생리", "경조사", "늦은 가족모임", "여행", "병가", "몸살", "기타"],
+                key="exception_reason_exempt"
+            )
+        else:
+            target_count = st.selectbox(
+                "이번 주 목표 횟수",
+                [1, 2],
+                key="target_count_adjust"
+            )
+            exception_reason = st.selectbox(
+                "사유",
+                ["몸살", "감기", "컨디션 난조", "병가", "생리", "기타"],
+                key="exception_reason_adjust"
+            )
+
         exception_memo = st.text_input("메모", key="exception_memo")
 
-        exception_submitted = st.form_submit_button("인증 제외 등록")
+        exception_submitted = st.form_submit_button("등록")
 
         if exception_submitted:
             week_key = get_week_start(exception_date)
@@ -179,11 +222,13 @@ with right_col:
             ).any()
 
             if already_exists:
-                st.warning("이미 해당 주간에 인증 제외로 등록되어 있습니다.")
+                st.warning("이미 해당 주간에 등록된 예외/목표 조정이 있습니다. 기존 항목을 취소하고 다시 등록해주세요.")
             else:
                 new_exception = pd.DataFrame([{
                     "name": exception_user,
                     "week": week_key,
+                    "type": exception_type,
+                    "target_count": target_count,
                     "reason": exception_reason,
                     "memo": exception_memo.strip()
                 }])
@@ -191,7 +236,7 @@ with right_col:
                 updated_exceptions = pd.concat([exceptions_data, new_exception], ignore_index=True)
                 conn.update(worksheet=EXCEPTIONS_WS, data=updated_exceptions)
 
-                st.success("인증 제외가 등록되었습니다.")
+                st.success("등록되었습니다.")
                 st.rerun()
 
 st.divider()
@@ -235,12 +280,19 @@ else:
             gaeun_count = len(week_df[week_df["name"] == "가은"])
             sohyeon_count = len(week_df[week_df["name"] == "소현"])
 
-            exempt_names = week_exceptions["name"].tolist()
-            gaeun_exempt = "가은" in exempt_names
-            sohyeon_exempt = "소현" in exempt_names
+            gaeun_required = get_required_count("가은", week_key, exceptions_data)
+            sohyeon_required = get_required_count("소현", week_key, exceptions_data)
 
-            gaeun_status = "인증 제외" if gaeun_exempt else f"{gaeun_count}회 인증"
-            sohyeon_status = "인증 제외" if sohyeon_exempt else f"{sohyeon_count}회 인증"
+            gaeun_status = (
+                "인증 제외"
+                if gaeun_required == 0
+                else f"{gaeun_count}/{gaeun_required}회 인증"
+            )
+            sohyeon_status = (
+                "인증 제외"
+                if sohyeon_required == 0
+                else f"{sohyeon_count}/{sohyeon_required}회 인증"
+            )
 
             st.info(
                 f"📊 **이번 주 인증 현황**\n\n"
@@ -248,19 +300,26 @@ else:
             )
 
             if not week_exceptions.empty:
-                st.warning("🚫 **이번 주 인증 제외 대상이 있습니다.**")
+                st.warning("🚫 **이번 주 예외/목표 조정 내역이 있습니다.**")
                 for ex_idx, ex_row in week_exceptions.iterrows():
                     memo_text = f" / {ex_row['memo']}" if str(ex_row["memo"]).strip() != "" else ""
-                    st.write(f"- **{ex_row['name']}**: {ex_row['reason']}{memo_text}")
 
-                    if st.button("인증 제외 취소", key=f"delete_exception_{i}_{ex_idx}"):
+                    if str(ex_row["type"]).strip() == "이번 주 인증 제외":
+                        st.write(f"- **{ex_row['name']}**: 인증 제외 / {ex_row['reason']}{memo_text}")
+                    else:
+                        st.write(
+                            f"- **{ex_row['name']}**: 목표 {int(ex_row['target_count'])}회로 조정 / "
+                            f"{ex_row['reason']}{memo_text}"
+                        )
+
+                    if st.button("예외/목표 조정 취소", key=f"delete_exception_{i}_{ex_idx}"):
                         updated_exceptions = exceptions_data.drop(index=ex_idx).reset_index(drop=True)
                         conn.update(worksheet=EXCEPTIONS_WS, data=updated_exceptions)
-                        st.success("인증 제외 등록이 취소되었습니다.")
+                        st.success("등록이 취소되었습니다.")
                         st.rerun()
 
-            gaeun_done = gaeun_exempt or gaeun_count >= 3
-            sohyeon_done = sohyeon_exempt or sohyeon_count >= 3
+            gaeun_done = gaeun_count >= gaeun_required
+            sohyeon_done = sohyeon_count >= sohyeon_required
 
             if gaeun_done and sohyeon_done:
                 st.write("🎉 **이번 주는 둘 다 정산 기준 통과!**")

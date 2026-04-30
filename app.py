@@ -286,7 +286,11 @@ else:
                     except Exception:
                         target_value = 3
 
-                    memo_text = f" / {target_row['memo']}" if str(target_row["memo"]).strip() != "" else ""
+                    memo_value = target_row["memo"]
+                    if pd.notnull(memo_value) and str(memo_value).strip() != "":
+                        memo_text = f" / {memo_value}"
+                    else:
+                        memo_text = ""
 
                     if target_value == 0:
                         st.write(f"- **{target_row['name']}**: 인증 제외 / {target_row['reason']}{memo_text}")

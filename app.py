@@ -59,20 +59,18 @@ def render_workout_links(urls_text):
         st.markdown(f"{n}. [홈트 영상 보러가기]({url})")
 
 
-def get_required_count(name, week_key, exceptions_data):
-    target_rows = exceptions_data[
-        (exceptions_data["name"] == name) &
-        (exceptions_data["week"] == week_key)
+def get_required_count(name, week_key, targets_df):
+    target_rows = targets_df[
+        (targets_df["name"] == name) &
+        (targets_df["week"] == week_key)
     ]
 
     if target_rows.empty:
         return 3
 
-    row = target_rows.iloc[0]
-
     try:
-        return int(row["target_count"])
-    except:
+        return int(target_rows.iloc[0]["target_count"])
+    except Exception:
         return 3
 
 
@@ -101,7 +99,7 @@ def get_records_data():
         return pd.DataFrame(columns=["name", "date", "image", "comment", "workout_urls"])
 
 
-def get_exceptions_data():
+def get_targets_data():
     try:
         df = conn.read(worksheet=EXCEPTIONS_WS, ttl=0)
 
@@ -120,7 +118,7 @@ def get_exceptions_data():
 
 
 existing_data = get_records_data()
-exceptions_data = get_exceptions_data()
+targets_data = get_targets_data()
 
 st.title("💪 오늘의 운동 완료 인증")
 st.write("❗기본 목표: 주 3일 30분 이상 운동완료❗")
@@ -135,14 +133,14 @@ with left_col:
     with st.form("upload_form", clear_on_submit=True):
         st.header("오늘의 운동 인증하기")
 
-        user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"])
-        date = st.date_input("날짜", datetime.date.today())
-        uploaded_file = st.file_uploader("인증 사진 📸", type=["jpg", "jpeg", "png"])
-        comment = st.text_area("오늘 운동🔥")
+        user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"], key="upload_user")
+        date = st.date_input("날짜", datetime.date.today(), key="upload_date")
+        uploaded_file = st.file_uploader("인증 사진 📸", type=["jpg", "jpeg", "png"], key="upload_file")
+        comment = st.text_area("오늘 운동🔥", key="upload_comment")
 
-        workout_url_1 = st.text_input("🏠💪 홈트 유튜브 링크 1")
-        workout_url_2 = st.text_input("🏠💪 홈트 유튜브 링크 2")
-        workout_url_3 = st.text_input("🏠💪 홈트 유튜브 링크 3")
+        workout_url_1 = st.text_input("🏠💪 홈트 유튜브 링크 1", key="upload_url_1")
+        workout_url_2 = st.text_input("🏠💪 홈트 유튜브 링크 2", key="upload_url_2")
+        workout_url_3 = st.text_input("🏠💪 홈트 유튜브 링크 3", key="upload_url_3")
 
         submitted = st.form_submit_button("인증 완료!")
 
@@ -176,23 +174,32 @@ with right_col:
     with st.form("target_form", clear_on_submit=True):
         st.header("🎯 주간 목표 조정")
 
-        target_user = st.selectbox("누구의 목표를 조정하나요?", ["가은", "소현"], key="target_user")
-        target_date = st.date_input("해당 주간 날짜 선택", datetime.date.today(), key="target_date")
+        target_user = st.selectbox(
+            "누구의 목표를 조정하나요?",
+            ["가은", "소현"],
+            key="target_user_select"
+        )
+
+        target_date = st.date_input(
+            "해당 주간 날짜 선택",
+            datetime.date.today(),
+            key="target_date_input"
+        )
 
         target_count = st.selectbox(
             "이번 주 목표 횟수",
-            [1, 2, 3],
+            options=[1, 2, 3],
             index=3,
-            key="target_count"
+            key="target_count_select"
         )
 
         reason = st.selectbox(
             "사유",
             ["병가", "여행", "모임", "경조사", "생리", "기타"],
-            key="reason"
+            key="reason_select"
         )
 
-        memo = st.text_input("메모", key="memo")
+        memo = st.text_input("메모", key="memo_input")
 
         target_submitted = st.form_submit_button("목표 조정 등록")
 
@@ -200,8 +207,8 @@ with right_col:
             week_key = get_week_start(target_date)
 
             already_exists = (
-                (exceptions_data["name"] == target_user)
-                & (exceptions_data["week"] == week_key)
+                (targets_data["name"] == target_user)
+                & (targets_data["week"] == week_key)
             ).any()
 
             if already_exists:
@@ -215,7 +222,7 @@ with right_col:
                     "memo": memo.strip()
                 }])
 
-                updated_targets = pd.concat([exceptions_data, new_target], ignore_index=True)
+                updated_targets = pd.concat([targets_data, new_target], ignore_index=True)
                 conn.update(worksheet=EXCEPTIONS_WS, data=updated_targets)
 
                 st.success("목표 조정이 등록되었습니다.")
@@ -233,8 +240,8 @@ if not existing_data.empty:
     for w in temp_records["week_key"].unique():
         week_keys.add(w)
 
-if not exceptions_data.empty:
-    for w in exceptions_data["week"].unique():
+if not targets_data.empty:
+    for w in targets_data["week"].unique():
         if str(w).strip() != "":
             week_keys.add(w)
 
@@ -257,13 +264,13 @@ else:
             else:
                 week_df = pd.DataFrame(columns=["name", "date", "image", "comment", "workout_urls", "week_key"])
 
-            week_targets = exceptions_data[exceptions_data["week"] == week_key].copy()
+            week_targets = targets_data[targets_data["week"] == week_key].copy()
 
             gaeun_count = len(week_df[week_df["name"] == "가은"])
             sohyeon_count = len(week_df[week_df["name"] == "소현"])
 
-            gaeun_required = get_required_count("가은", week_key, exceptions_data)
-            sohyeon_required = get_required_count("소현", week_key, exceptions_data)
+            gaeun_required = get_required_count("가은", week_key, targets_data)
+            sohyeon_required = get_required_count("소현", week_key, targets_data)
 
             gaeun_status = "인증 제외" if gaeun_required == 0 else f"{gaeun_count}/{gaeun_required}회 인증"
             sohyeon_status = "인증 제외" if sohyeon_required == 0 else f"{sohyeon_count}/{sohyeon_required}회 인증"
@@ -277,21 +284,20 @@ else:
                 st.warning("🎯 **이번 주 목표 조정 내역이 있습니다.**")
 
                 for target_idx, target_row in week_targets.iterrows():
+                    try:
+                        target_value = int(target_row["target_count"])
+                    except Exception:
+                        target_value = 3
+
                     memo_text = f" / {target_row['memo']}" if str(target_row["memo"]).strip() != "" else ""
 
-                    if int(target_row["target_count"]) == 0:
-                        st.write(
-                            f"- **{target_row['name']}**: 인증 제외 / "
-                            f"{target_row['reason']}{memo_text}"
-                        )
+                    if target_value == 0:
+                        st.write(f"- **{target_row['name']}**: 인증 제외 / {target_row['reason']}{memo_text}")
                     else:
-                        st.write(
-                            f"- **{target_row['name']}**: 목표 {int(target_row['target_count'])}회 / "
-                            f"{target_row['reason']}{memo_text}"
-                        )
+                        st.write(f"- **{target_row['name']}**: 목표 {target_value}회 / {target_row['reason']}{memo_text}")
 
                     if st.button("목표 조정 취소", key=f"delete_target_{i}_{target_idx}"):
-                        updated_targets = exceptions_data.drop(index=target_idx).reset_index(drop=True)
+                        updated_targets = targets_data.drop(index=target_idx).reset_index(drop=True)
                         conn.update(worksheet=EXCEPTIONS_WS, data=updated_targets)
                         st.success("목표 조정이 취소되었습니다.")
                         st.rerun()

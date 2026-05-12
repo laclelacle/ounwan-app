@@ -5,6 +5,7 @@ import pandas as pd
 import base64
 from PIL import Image
 import io
+import calendar
 
 st.set_page_config(page_title="오운완 인증💪", page_icon="🏋️‍♀️", layout="centered")
 
@@ -55,7 +56,6 @@ def split_images(image_text):
 
 def render_images(image_text):
     images = split_images(image_text)
-
     for img in images:
         try:
             st.image(base64.b64decode(img), use_container_width=True)
@@ -141,36 +141,111 @@ def get_targets_data():
         return pd.DataFrame(columns=["name", "week", "target_count", "reason", "memo"])
 
 
+def render_month_calendar(df):
+    if df.empty:
+        return
+
+    st.subheader("📅 월간 오운완 달력")
+
+    selected_month = st.date_input(
+        "달력 기준 월 선택",
+        datetime.date.today(),
+        key="calendar_month"
+    )
+
+    year = selected_month.year
+    month = selected_month.month
+
+    month_df = df[
+        (df["date"].dt.year == year) &
+        (df["date"].dt.month == month)
+    ]
+
+    cal = calendar.Calendar(firstweekday=0)
+    weeks = cal.monthdatescalendar(year, month)
+
+    html = """
+    <style>
+    .calendar-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .calendar-table th {
+        background-color: #f3f4f6;
+        padding: 10px;
+        text-align: center;
+        font-size: 14px;
+    }
+    .calendar-table td {
+        border: 1px solid #ddd;
+        vertical-align: top;
+        height: 105px;
+        padding: 8px;
+        font-size: 14px;
+    }
+    .calendar-day {
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+    .calendar-out {
+        color: #bbb;
+        background-color: #fafafa;
+    }
+    .workout-badge {
+        display: block;
+        margin-top: 4px;
+        padding: 4px 6px;
+        border-radius: 8px;
+        background-color: #e8f2ff;
+        font-size: 13px;
+    }
+    </style>
+    <table class="calendar-table">
+    <tr>
+        <th>월</th>
+        <th>화</th>
+        <th>수</th>
+        <th>목</th>
+        <th>금</th>
+        <th>토</th>
+        <th>일</th>
+    </tr>
+    """
+
+    for week in weeks:
+        html += "<tr>"
+        for day in week:
+            is_current_month = day.month == month
+            day_df = month_df[month_df["date"].dt.date == day]
+
+            cell_class = "" if is_current_month else "calendar-out"
+            html += f'<td class="{cell_class}">'
+            html += f'<div class="calendar-day">{day.day}</div>'
+
+            if not day_df.empty:
+                for name in day_df["name"].unique():
+                    count = len(day_df[day_df["name"] == name])
+                    icon = "💎" if name == "가은" else "🆑️"
+                    html += f'<span class="workout-badge">{icon} {name} {count}회</span>'
+
+            html += "</td>"
+        html += "</tr>"
+
+    html += "</table>"
+
+    st.markdown(html, unsafe_allow_html=True)
+
+
 existing_data = get_records_data()
 targets_data = get_targets_data()
 
 st.sidebar.header("🎯 주간 목표 조정")
 
-target_user = st.sidebar.selectbox(
-    "누구의 목표를 조정하나요?",
-    ["가은", "소현"],
-    key="target_user_select"
-)
-
-target_date = st.sidebar.date_input(
-    "해당 주간 날짜 선택",
-    datetime.date.today(),
-    key="target_date_input"
-)
-
-target_count = st.sidebar.selectbox(
-    "이번 주 목표 횟수",
-    options=[0, 1, 2, 3],
-    index=3,
-    key="target_count_select"
-)
-
-reason = st.sidebar.selectbox(
-    "사유",
-    ["병가", "여행", "모임", "경조사", "생리", "기타"],
-    key="reason_select"
-)
-
+target_user = st.sidebar.selectbox("누구의 목표를 조정하나요?", ["가은", "소현"], key="target_user_select")
+target_date = st.sidebar.date_input("해당 주간 날짜 선택", datetime.date.today(), key="target_date_input")
+target_count = st.sidebar.selectbox("이번 주 목표 횟수", options=[0, 1, 2, 3], index=3, key="target_count_select")
+reason = st.sidebar.selectbox("사유", ["병가", "여행", "모임", "경조사", "생리", "기타"], key="reason_select")
 memo = st.sidebar.text_input("메모", key="memo_input")
 
 if st.sidebar.button("목표 조정 등록", key="target_submit_button"):
@@ -211,12 +286,14 @@ with st.form("upload_form", clear_on_submit=True):
 
     user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"], key="upload_user")
     date = st.date_input("날짜", datetime.date.today(), key="upload_date")
+
     uploaded_files = st.file_uploader(
         "인증 사진 📸",
         type=["jpg", "jpeg", "png"],
         accept_multiple_files=True,
         key="upload_files"
     )
+
     comment = st.text_area("오늘 운동🔥", key="upload_comment")
 
     workout_url_1 = st.text_input("🏠💪 홈트 유튜브 링크 1", key="upload_url_1")
@@ -253,6 +330,9 @@ with st.form("upload_form", clear_on_submit=True):
 st.divider()
 
 st.header("🗓️ 주간 오운완 리포트")
+
+render_month_calendar(existing_data)
+st.divider()
 
 week_keys = set()
 

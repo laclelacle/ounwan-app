@@ -7,7 +7,7 @@ from PIL import Image
 import io
 import calendar
 
-st.set_page_config(page_title="오운완 인증💪", page_icon="🏋️‍♀️", layout="centered")
+st.set_page_config(page_title="오운완 인증💪", page_icon="🏋️‍♀️", layout="wide")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -143,6 +143,7 @@ def get_targets_data():
 
 def render_month_calendar(df):
     if df.empty:
+        st.info("달력에 표시할 기록이 없습니다.")
         return
 
     st.subheader("📅 월간 오운완 달력")
@@ -173,20 +174,20 @@ def render_month_calendar(df):
     }
     .calendar-table th {
         background-color: #f3f4f6;
-        padding: 10px;
+        padding: 8px;
         text-align: center;
-        font-size: 14px;
+        font-size: 13px;
     }
     .calendar-table td {
         border: 1px solid #ddd;
         vertical-align: top;
         height: 105px;
-        padding: 8px;
-        font-size: 14px;
+        padding: 6px;
+        font-size: 13px;
     }
     .calendar-day {
         font-weight: bold;
-        margin-bottom: 6px;
+        margin-bottom: 5px;
     }
     .calendar-out {
         color: #bbb;
@@ -198,7 +199,7 @@ def render_month_calendar(df):
         padding: 4px 6px;
         border-radius: 8px;
         background-color: #e8f2ff;
-        font-size: 13px;
+        font-size: 12px;
     }
     </style>
     <table class="calendar-table">
@@ -362,190 +363,166 @@ with report_col:
             week_label = get_week_label(week_start)
 
             with st.expander(f"📁 {week_label}", expanded=(i == 0)):
+                if not existing_data.empty:
+                    df_sorted = existing_data.copy()
+                    df_sorted["week_key"] = df_sorted["date"].apply(get_week_start)
+                    week_df = df_sorted[df_sorted["week_key"] == week_key].sort_values(
+                        by="date", ascending=False
+                    )
+                else:
+                    week_df = pd.DataFrame(columns=["name", "date", "image", "comment", "workout_urls", "week_key"])
 
-week_keys = set()
+                week_targets = targets_data[targets_data["week"] == week_key].copy()
 
-if not existing_data.empty:
-    temp_records = existing_data.copy()
-    temp_records["week_key"] = temp_records["date"].apply(get_week_start)
-    for w in temp_records["week_key"].unique():
-        week_keys.add(w)
+                gaeun_count = len(week_df[week_df["name"] == "가은"])
+                sohyeon_count = len(week_df[week_df["name"] == "소현"])
 
-if not targets_data.empty:
-    for w in targets_data["week"].unique():
-        if str(w).strip() != "":
-            week_keys.add(w)
+                gaeun_required = get_required_count("가은", week_key, targets_data)
+                sohyeon_required = get_required_count("소현", week_key, targets_data)
 
-if len(week_keys) == 0:
-    st.info("아직 인증된 기록이 없습니다.")
-else:
-    sorted_week_keys = sorted(list(week_keys), reverse=True)
+                gaeun_status = "인증 제외" if gaeun_required == 0 else f"{gaeun_count}/{gaeun_required}회 인증"
+                sohyeon_status = "인증 제외" if sohyeon_required == 0 else f"{sohyeon_count}/{sohyeon_required}회 인증"
 
-    for i, week_key in enumerate(sorted_week_keys):
-        week_start = pd.to_datetime(week_key)
-        week_label = get_week_label(week_start)
-
-        with st.expander(f"📁 {week_label}", expanded=(i == 0)):
-            if not existing_data.empty:
-                df_sorted = existing_data.copy()
-                df_sorted["week_key"] = df_sorted["date"].apply(get_week_start)
-                week_df = df_sorted[df_sorted["week_key"] == week_key].sort_values(
-                    by="date", ascending=False
+                st.info(
+                    f"📊 **이번 주 인증 현황**\n\n"
+                    f"💎 **가은**: {gaeun_status}  |  🆑️ **소현**: {sohyeon_status}"
                 )
-            else:
-                week_df = pd.DataFrame(columns=["name", "date", "image", "comment", "workout_urls", "week_key"])
 
-            week_targets = targets_data[targets_data["week"] == week_key].copy()
+                if not week_targets.empty:
+                    st.warning("🎯 **이번 주 목표 조정 내역이 있습니다.**")
 
-            gaeun_count = len(week_df[week_df["name"] == "가은"])
-            sohyeon_count = len(week_df[week_df["name"] == "소현"])
+                    for target_idx, target_row in week_targets.iterrows():
+                        try:
+                            target_value = int(target_row["target_count"])
+                        except Exception:
+                            target_value = 3
 
-            gaeun_required = get_required_count("가은", week_key, targets_data)
-            sohyeon_required = get_required_count("소현", week_key, targets_data)
+                        memo_value = target_row["memo"]
+                        if pd.notnull(memo_value) and str(memo_value).strip() != "":
+                            memo_text = f" / {memo_value}"
+                        else:
+                            memo_text = ""
 
-            gaeun_status = "인증 제외" if gaeun_required == 0 else f"{gaeun_count}/{gaeun_required}회 인증"
-            sohyeon_status = "인증 제외" if sohyeon_required == 0 else f"{sohyeon_count}/{sohyeon_required}회 인증"
+                        if target_value == 0:
+                            st.write(f"- **{target_row['name']}**: 인증 제외 / {target_row['reason']}{memo_text}")
+                        else:
+                            st.write(f"- **{target_row['name']}**: 목표 {target_value}회 / {target_row['reason']}{memo_text}")
 
-            st.info(
-                f"📊 **이번 주 인증 현황**\n\n"
-                f"💎 **가은**: {gaeun_status}  |  🆑️ **소현**: {sohyeon_status}"
-            )
+                        if st.button("목표 조정 취소", key=f"delete_target_{i}_{target_idx}"):
+                            updated_targets = targets_data.drop(index=target_idx).reset_index(drop=True)
+                            conn.update(worksheet=EXCEPTIONS_WS, data=updated_targets)
+                            st.success("목표 조정이 취소되었습니다.")
+                            st.rerun()
 
-            if not week_targets.empty:
-                st.warning("🎯 **이번 주 목표 조정 내역이 있습니다.**")
+                gaeun_done = gaeun_count >= gaeun_required
+                sohyeon_done = sohyeon_count >= sohyeon_required
 
-                for target_idx, target_row in week_targets.iterrows():
-                    try:
-                        target_value = int(target_row["target_count"])
-                    except Exception:
-                        target_value = 3
+                if gaeun_done and sohyeon_done:
+                    st.write("🎉 **이번 주는 둘 다 정산 기준 통과!**")
+                else:
+                    st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
 
-                    memo_value = target_row["memo"]
-                    if pd.notnull(memo_value) and str(memo_value).strip() != "":
-                        memo_text = f" / {memo_value}"
-                    else:
-                        memo_text = ""
+                st.divider()
 
-                    if target_value == 0:
-                        st.write(f"- **{target_row['name']}**: 인증 제외 / {target_row['reason']}{memo_text}")
-                    else:
-                        st.write(f"- **{target_row['name']}**: 목표 {target_value}회 / {target_row['reason']}{memo_text}")
+                if week_df.empty:
+                    st.info("이 주간에는 운동 인증 기록이 없습니다.")
+                else:
+                    dates_in_week = week_df["date"].unique()
 
-                    if st.button("목표 조정 취소", key=f"delete_target_{i}_{target_idx}"):
-                        updated_targets = targets_data.drop(index=target_idx).reset_index(drop=True)
-                        conn.update(worksheet=EXCEPTIONS_WS, data=updated_targets)
-                        st.success("목표 조정이 취소되었습니다.")
-                        st.rerun()
+                    for j, d in enumerate(dates_in_week):
+                        d_str = pd.to_datetime(d).strftime("%Y-%m-%d")
 
-            gaeun_done = gaeun_count >= gaeun_required
-            sohyeon_done = sohyeon_count >= sohyeon_required
+                        with st.expander(f"📅 {d_str} 기록 보기", expanded=(i == 0 and j == 0)):
+                            day_df = week_df[week_df["date"] == d]
 
-            if gaeun_done and sohyeon_done:
-                st.write("🎉 **이번 주는 둘 다 정산 기준 통과!**")
-            else:
-                st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
+                            for idx, row in day_df.iterrows():
+                                icon = "💎" if row["name"] == "가은" else "🆑️"
 
-            st.divider()
+                                with st.chat_message("user", avatar=icon):
+                                    st.write(f"**{row['name']}의 기록**")
 
-            if week_df.empty:
-                st.info("이 주간에는 운동 인증 기록이 없습니다.")
-            else:
-                dates_in_week = week_df["date"].unique()
+                                    if pd.notnull(row["image"]) and row["image"] != "":
+                                        render_images(row["image"])
 
-                for j, d in enumerate(dates_in_week):
-                    d_str = pd.to_datetime(d).strftime("%Y-%m-%d")
+                                    if pd.notnull(row["comment"]) and row["comment"] != "":
+                                        st.write(f"💬 {row['comment']}")
 
-                    with st.expander(f"📅 {d_str} 기록 보기", expanded=(i == 0 and j == 0)):
-                        day_df = week_df[week_df["date"] == d]
+                                    if pd.notnull(row["workout_urls"]) and str(row["workout_urls"]).strip() != "":
+                                        render_workout_links(row["workout_urls"])
 
-                        for idx, row in day_df.iterrows():
-                            icon = "💎" if row["name"] == "가은" else "🆑️"
+                                    btn_col1, btn_col2 = st.columns(2)
 
-                            with st.chat_message("user", avatar=icon):
-                                st.write(f"**{row['name']}의 기록**")
+                                    with btn_col1:
+                                        if st.button("✏️ 수정", key=f"edit_record_{idx}"):
+                                            st.session_state.editing_record_idx = idx
+                                            st.rerun()
 
-                                if pd.notnull(row["image"]) and row["image"] != "":
-                                    render_images(row["image"])
+                                    with btn_col2:
+                                        if st.button("🗑️ 이 기록 삭제", key=f"delete_record_{idx}"):
+                                            deleted_df = existing_data.drop(index=idx).reset_index(drop=True)
+                                            conn.update(worksheet=RECORDS_WS, data=deleted_df)
 
-                                if pd.notnull(row["comment"]) and row["comment"] != "":
-                                    st.write(f"💬 {row['comment']}")
+                                            if st.session_state.editing_record_idx == idx:
+                                                st.session_state.editing_record_idx = None
 
-                                if pd.notnull(row["workout_urls"]) and str(row["workout_urls"]).strip() != "":
-                                    render_workout_links(row["workout_urls"])
+                                            st.success("해당 기록이 삭제되었습니다.")
+                                            st.rerun()
 
-                                btn_col1, btn_col2 = st.columns(2)
+                                    if st.session_state.editing_record_idx == idx:
+                                        st.markdown("### ✏️ 기록 수정하기")
 
-                                with btn_col1:
-                                    if st.button("✏️ 수정", key=f"edit_record_{idx}"):
-                                        st.session_state.editing_record_idx = idx
-                                        st.rerun()
+                                        existing_links = split_links(row["workout_urls"])
+                                        existing_link_1 = existing_links[0] if len(existing_links) > 0 else ""
+                                        existing_link_2 = existing_links[1] if len(existing_links) > 1 else ""
+                                        existing_link_3 = existing_links[2] if len(existing_links) > 2 else ""
 
-                                with btn_col2:
-                                    if st.button("🗑️ 이 기록 삭제", key=f"delete_record_{idx}"):
-                                        deleted_df = existing_data.drop(index=idx).reset_index(drop=True)
-                                        conn.update(worksheet=RECORDS_WS, data=deleted_df)
+                                        with st.form(f"edit_form_{idx}"):
+                                            edit_comment = st.text_area(
+                                                "운동 내용 수정",
+                                                value=str(row["comment"]) if pd.notnull(row["comment"]) else ""
+                                            )
 
-                                        if st.session_state.editing_record_idx == idx:
+                                            edit_workout_url_1 = st.text_input(
+                                                "🏠💪 홈트 유튜브 링크 1 수정",
+                                                value=existing_link_1
+                                            )
+                                            edit_workout_url_2 = st.text_input(
+                                                "🏠💪 홈트 유튜브 링크 2 수정",
+                                                value=existing_link_2
+                                            )
+                                            edit_workout_url_3 = st.text_input(
+                                                "🏠💪 홈트 유튜브 링크 3 수정",
+                                                value=existing_link_3
+                                            )
+
+                                            edit_uploaded_files = st.file_uploader(
+                                                "새 인증 사진으로 교체",
+                                                type=["jpg", "jpeg", "png"],
+                                                accept_multiple_files=True,
+                                                key=f"edit_files_{idx}"
+                                            )
+
+                                            save_edit = st.form_submit_button("💾 수정 저장")
+
+                                        cancel_edit = st.button("취소", key=f"cancel_edit_{idx}")
+
+                                        if save_edit:
+                                            updated_df = existing_data.copy()
+                                            updated_df.at[idx, "comment"] = edit_comment.strip()
+                                            updated_df.at[idx, "workout_urls"] = combine_links(
+                                                edit_workout_url_1,
+                                                edit_workout_url_2,
+                                                edit_workout_url_3
+                                            )
+
+                                            if edit_uploaded_files:
+                                                updated_df.at[idx, "image"] = encode_uploaded_images(edit_uploaded_files)
+
+                                            conn.update(worksheet=RECORDS_WS, data=updated_df)
                                             st.session_state.editing_record_idx = None
+                                            st.success("기록이 수정되었습니다.")
+                                            st.rerun()
 
-                                        st.success("해당 기록이 삭제되었습니다.")
-                                        st.rerun()
-
-                                if st.session_state.editing_record_idx == idx:
-                                    st.markdown("### ✏️ 기록 수정하기")
-
-                                    existing_links = split_links(row["workout_urls"])
-                                    existing_link_1 = existing_links[0] if len(existing_links) > 0 else ""
-                                    existing_link_2 = existing_links[1] if len(existing_links) > 1 else ""
-                                    existing_link_3 = existing_links[2] if len(existing_links) > 2 else ""
-
-                                    with st.form(f"edit_form_{idx}"):
-                                        edit_comment = st.text_area(
-                                            "운동 내용 수정",
-                                            value=str(row["comment"]) if pd.notnull(row["comment"]) else ""
-                                        )
-
-                                        edit_workout_url_1 = st.text_input(
-                                            "🏠💪 홈트 유튜브 링크 1 수정",
-                                            value=existing_link_1
-                                        )
-                                        edit_workout_url_2 = st.text_input(
-                                            "🏠💪 홈트 유튜브 링크 2 수정",
-                                            value=existing_link_2
-                                        )
-                                        edit_workout_url_3 = st.text_input(
-                                            "🏠💪 홈트 유튜브 링크 3 수정",
-                                            value=existing_link_3
-                                        )
-
-                                        edit_uploaded_files = st.file_uploader(
-                                            "새 인증 사진으로 교체",
-                                            type=["jpg", "jpeg", "png"],
-                                            accept_multiple_files=True,
-                                            key=f"edit_files_{idx}"
-                                        )
-
-                                        save_edit = st.form_submit_button("💾 수정 저장")
-
-                                    cancel_edit = st.button("취소", key=f"cancel_edit_{idx}")
-
-                                    if save_edit:
-                                        updated_df = existing_data.copy()
-                                        updated_df.at[idx, "comment"] = edit_comment.strip()
-                                        updated_df.at[idx, "workout_urls"] = combine_links(
-                                            edit_workout_url_1,
-                                            edit_workout_url_2,
-                                            edit_workout_url_3
-                                        )
-
-                                        if edit_uploaded_files:
-                                            updated_df.at[idx, "image"] = encode_uploaded_images(edit_uploaded_files)
-
-                                        conn.update(worksheet=RECORDS_WS, data=updated_df)
-                                        st.session_state.editing_record_idx = None
-                                        st.success("기록이 수정되었습니다.")
-                                        st.rerun()
-
-                                    if cancel_edit:
-                                        st.session_state.editing_record_idx = None
-                                        st.rerun()
+                                        if cancel_edit:
+                                            st.session_state.editing_record_idx = None
+                                            st.rerun()

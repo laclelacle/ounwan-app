@@ -331,8 +331,37 @@ st.divider()
 
 st.header("🗓️ 주간 오운완 리포트")
 
-render_month_calendar(existing_data)
-st.divider()
+calendar_col, report_col = st.columns([1, 1.2])
+
+with calendar_col:
+    render_month_calendar(existing_data)
+
+with report_col:
+    st.subheader("📋 주간 기록 리스트")
+
+    week_keys = set()
+
+    if not existing_data.empty:
+        temp_records = existing_data.copy()
+        temp_records["week_key"] = temp_records["date"].apply(get_week_start)
+        for w in temp_records["week_key"].unique():
+            week_keys.add(w)
+
+    if not targets_data.empty:
+        for w in targets_data["week"].unique():
+            if str(w).strip() != "":
+                week_keys.add(w)
+
+    if len(week_keys) == 0:
+        st.info("아직 인증된 기록이 없습니다.")
+    else:
+        sorted_week_keys = sorted(list(week_keys), reverse=True)
+
+        for i, week_key in enumerate(sorted_week_keys):
+            week_start = pd.to_datetime(week_key)
+            week_label = get_week_label(week_start)
+
+            with st.expander(f"📁 {week_label}", expanded=(i == 0)):
 
 week_keys = set()
 

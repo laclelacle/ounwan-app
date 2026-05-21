@@ -703,15 +703,6 @@ with report_col:
                 else:
                     st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
 
-                if rj_float_b64:
-                    st.markdown(
-                        f"""
-                        <div class="rj-decoration">
-                            <img src="data:image/png;base64,{rj_float_b64}">
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
 
                 st.divider()
 

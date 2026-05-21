@@ -245,7 +245,7 @@ st.sidebar.header("🎯 주간 목표 조정")
 
 target_user = st.sidebar.selectbox("누구의 목표를 조정하나요?", ["가은", "소현"], key="target_user_select")
 target_date = st.sidebar.date_input("해당 주간 날짜 선택", datetime.date.today(), key="target_date_input")
-target_count = st.sidebar.selectbox("이번 주 목표 횟수", options=[0, 1, 2], index=3, key="target_count_select")
+target_count = st.sidebar.selectbox("이번 주 목표 횟수", options=[0, 1, 2], index=2, key="target_count_select")
 reason = st.sidebar.selectbox("사유", ["병가", "여행", "모임", "경조사", "생리", "시험 준비", "기타"], key="reason_select")
 memo = st.sidebar.text_input("메모", key="memo_input")
 

@@ -8,7 +8,12 @@ import io
 import calendar
 from pathlib import Path
 
-st.set_page_config(page_title="오운완 인증💪", page_icon="🏖️", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="오운완 인증💪",
+    page_icon="🏖️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 ASSET_DIR = Path("assets")
 DEER_SURF = ASSET_DIR / "deer_surf.png"
@@ -40,11 +45,15 @@ summer_banner_b64 = img_to_base64(SUMMER_BANNER)
 
 st.markdown(f"""
 <style>
-header[data-testid="stHeader"] {{
+header[data-testid="stHeader"] {
     background: transparent;
-    height: 0rem;
-}}
+    height: 3rem;
+}
 
+div[data-testid="stToolbar"],
+div[data-testid="stDecoration"] {
+    display: none;
+}
 div[data-testid="stToolbar"],
 div[data-testid="stDecoration"] {{
     display: none;

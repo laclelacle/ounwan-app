@@ -6,173 +6,215 @@ import base64
 from PIL import Image
 import io
 import calendar
+from pathlib import Path
 
 st.set_page_config(page_title="오운완 인증💪", page_icon="🏖️", layout="wide")
 
-st.markdown("""
+ASSET_DIR = Path("assets")
+DEER_SURF = ASSET_DIR / "deer_surf.png"
+RJ_FLOAT = ASSET_DIR / "rj_float.png"
+SUMMER_BANNER = ASSET_DIR / "summer_banner.png"
+
+RECORDS_WS = "시트1"
+EXCEPTIONS_WS = "exceptions"
+IMAGE_SEPARATOR = "|||IMAGE|||"
+
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+if "editing_record_idx" not in st.session_state:
+    st.session_state.editing_record_idx = None
+
+
+def img_to_base64(path):
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
+
+
+deer_surf_b64 = img_to_base64(DEER_SURF)
+rj_float_b64 = img_to_base64(RJ_FLOAT)
+summer_banner_b64 = img_to_base64(SUMMER_BANNER)
+
+
+st.markdown(f"""
 <style>
-header[data-testid="stHeader"] {
+header[data-testid="stHeader"] {{
     background: transparent;
     height: 0rem;
-}
-div[data-testid="stToolbar"], div[data-testid="stDecoration"] {
+}}
+
+div[data-testid="stToolbar"],
+div[data-testid="stDecoration"] {{
     display: none;
-}
-.stApp {
-    background: linear-gradient(180deg, #eaf8ff 0%, #fff8f0 45%, #fff1f7 100%);
-}
-.block-container {
-    padding-top: 1.2rem;
+}}
+
+.stApp {{
+    background:
+        linear-gradient(180deg, rgba(232,248,255,0.92), rgba(255,248,238,0.95), rgba(255,241,247,0.95));
+}}
+
+.block-container {{
+    padding-top: 1rem;
     padding-bottom: 2rem;
-}
-section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #e3f5ff 0%, #fff0f6 100%);
-    border-right: 1px solid #d7efff;
-}
-h1, h2, h3 {
-    color: #113b6d;
-    font-weight: 800;
-}
-div[data-testid="stForm"] {
-    background: rgba(255,255,255,0.92);
+}}
+
+section[data-testid="stSidebar"] {{
+    background:
+        linear-gradient(180deg, rgba(225,245,255,0.95), rgba(255,244,249,0.95)),
+        url("data:image/png;base64,{deer_surf_b64}");
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: 95%;
+    border-right: 1px solid #c7eaff;
+}}
+
+h1, h2, h3 {{
+    color: #073b73;
+    font-weight: 900;
+}}
+
+div[data-testid="stForm"] {{
+    background: rgba(255,255,255,0.94);
     padding: 28px;
-    border-radius: 26px;
-    box-shadow: 0 8px 25px rgba(92, 155, 200, 0.18);
+    border-radius: 28px;
+    box-shadow: 0 8px 24px rgba(64,151,198,0.18);
     border: 1.5px solid #bfe8ff;
-}
-div[data-testid="stExpander"] {
-    background: rgba(255,255,255,0.92);
-    border-radius: 20px;
+}}
+
+div[data-testid="stExpander"] {{
+    background: rgba(255,255,255,0.94);
+    border-radius: 22px;
     border: 1px solid #cfeeff;
-    box-shadow: 0 5px 18px rgba(92, 155, 200, 0.12);
+    box-shadow: 0 6px 18px rgba(64,151,198,0.12);
     margin-bottom: 12px;
-}
-.stButton>button {
-    background: linear-gradient(90deg, #65c7f7, #ff9eb5);
+}}
+
+.stButton>button {{
+    background: linear-gradient(90deg, #63c7f7, #ff94ad);
     color: white;
     border: none;
     border-radius: 999px;
-    font-weight: 800;
-    padding: 0.55rem 1.2rem;
-}
-.stButton>button:hover {
-    background: linear-gradient(90deg, #42b7f5, #ff7fa0);
+    font-weight: 900;
+    padding: 0.55rem 1.3rem;
+}}
+
+.stButton>button:hover {{
+    background: linear-gradient(90deg, #35b5f4, #ff7194);
     color: white;
     transform: scale(1.02);
-}
+}}
+
 .stTextInput input,
 .stTextArea textarea,
-.stDateInput input {
-    border-radius: 14px !important;
-    border: 1px solid #cfeeff !important;
+.stDateInput input {{
+    border-radius: 15px !important;
+    border: 1px solid #bfe8ff !important;
     background-color: #ffffff !important;
-}
-div[data-baseweb="select"] > div {
-    border-radius: 14px !important;
-    border-color: #cfeeff !important;
-}
-.custom-hero {
-    background: linear-gradient(135deg, #b9ecff 0%, #fff5d6 48%, #ffd6e7 100%);
+}}
+
+div[data-baseweb="select"] > div {{
+    border-radius: 15px !important;
+    border-color: #bfe8ff !important;
+}}
+
+.custom-hero {{
+    background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.15)),
+        url("data:image/png;base64,{summer_banner_b64}");
+    background-size: cover;
+    background-position: center;
     border-radius: 32px;
-    padding: 34px 36px;
-    margin-bottom: 28px;
-    box-shadow: 0 10px 30px rgba(64, 151, 198, 0.18);
-    border: 2px solid rgba(255,255,255,0.9);
-    position: relative;
-    overflow: hidden;
-}
-.custom-hero h1 {
-    text-align: center;
-    font-size: 56px;
-    margin: 0 0 10px 0;
-    color: #174574;
-}
-.custom-hero p {
-    text-align: center;
-    font-size: 19px;
-    margin: 7px 0;
-    color: #345;
-    font-weight: 600;
-}
-.mascot-left {
-    position: absolute;
-    left: 30px;
-    top: 28px;
-    font-size: 78px;
-}
-.mascot-right {
-    position: absolute;
-    right: 32px;
-    top: 34px;
-    font-size: 76px;
-}
-.hero-chip {
-    display: inline-block;
-    background: rgba(255,255,255,0.7);
-    padding: 8px 18px;
+    padding: 42px 36px;
+    margin-bottom: 26px;
+    min-height: 280px;
+    box-shadow: 0 10px 30px rgba(64,151,198,0.2);
+    border: 2px solid rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}}
+
+.hero-text-box {{
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(2px);
+    padding: 14px 28px;
     border-radius: 999px;
-    margin-bottom: 10px;
-    color: #2f6f9f;
-    font-weight: 800;
-}
-.wave {
-    font-size: 24px;
-    text-align: center;
-    margin-top: 16px;
-}
-.calendar-table {
+    margin: 8px;
+    color: #073b73;
+    font-weight: 900;
+    box-shadow: 0 4px 12px rgba(64,151,198,0.12);
+}}
+
+.hero-title {{
+    font-size: 58px;
+    font-weight: 1000;
+    color: #0657a6;
+    text-shadow: 2px 2px 0 white;
+    margin-bottom: 12px;
+}}
+
+.calendar-table {{
     width: 100%;
     border-collapse: separate;
     border-spacing: 5px;
     table-layout: fixed;
-}
-.calendar-table th {
+}}
+
+.calendar-table th {{
     background-color: #dff3ff;
     padding: 9px;
     text-align: center;
     font-size: 13px;
     border-radius: 12px;
-    color: #174574;
-}
-.calendar-table td {
+    color: #073b73;
+}}
+
+.calendar-table td {{
     border: 1px solid #d7efff;
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.88);
     vertical-align: top;
     height: 108px;
     padding: 7px;
     font-size: 13px;
     border-radius: 14px;
-}
-.calendar-day {
+}}
+
+.calendar-day {{
     font-weight: bold;
     margin-bottom: 5px;
-    color: #174574;
-}
-.calendar-out {
+    color: #073b73;
+}}
+
+.calendar-out {{
     color: #bbb;
     background-color: #f7fbff !important;
-}
-.workout-badge {
+}}
+
+.workout-badge {{
     display: block;
     margin-top: 4px;
     padding: 4px 6px;
     border-radius: 10px;
     background: linear-gradient(90deg, #e2f4ff, #ffe3ec);
     font-size: 12px;
-    color: #174574;
-    font-weight: 700;
-}
+    color: #073b73;
+    font-weight: 800;
+}}
+
+.rj-decoration {{
+    text-align: right;
+    margin-top: -80px;
+    margin-bottom: -10px;
+}}
+
+.rj-decoration img {{
+    width: 190px;
+}}
 </style>
 """, unsafe_allow_html=True)
-
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-RECORDS_WS = "시트1"
-EXCEPTIONS_WS = "exceptions"
-IMAGE_SEPARATOR = "|||IMAGE|||"
-
-if "editing_record_idx" not in st.session_state:
-    st.session_state.editing_record_idx = None
 
 
 def get_week_label(d):
@@ -232,7 +274,6 @@ def render_workout_links(urls_text):
     links = split_links(urls_text)
     if not links:
         return
-
     st.write("🏠💪 **따라한 홈트 영상**")
     for n, url in enumerate(links, start=1):
         st.markdown(f"{n}. [홈트 영상 보러가기]({url})")
@@ -243,10 +284,8 @@ def get_required_count(name, week_key, targets_df):
         (targets_df["name"] == name) &
         (targets_df["week"] == week_key)
     ]
-
     if target_rows.empty:
         return 3
-
     try:
         return int(target_rows.iloc[0]["target_count"])
     except Exception:
@@ -307,7 +346,7 @@ def render_month_calendar(df):
         st.info("달력에 표시할 기록이 없습니다.")
         return
 
-    st.subheader("📅 월간 리포트 🌴")
+    st.subheader("🌞 월간 리포트 🌴")
 
     selected_month = st.date_input(
         "달력 기준 월 선택",
@@ -352,7 +391,7 @@ def render_month_calendar(df):
             if not day_df.empty:
                 for name in day_df["name"].unique():
                     count = len(day_df[day_df["name"] == name])
-                    icon = "💎" if name == "가은" else "🆑️"
+                    icon = "🐶" if name == "가은" else "🦌"
                     html += f'<span class="workout-badge">{icon} {name} {count}회</span>'
 
             html += "</td>"
@@ -366,6 +405,7 @@ existing_data = get_records_data()
 targets_data = get_targets_data()
 
 st.sidebar.header("🎯 주간 목표 조정")
+
 target_user = st.sidebar.selectbox("누구의 목표를 조정하나요?", ["가은", "소현"], key="target_user_select")
 target_date = st.sidebar.date_input("해당 주간 날짜 선택", datetime.date.today(), key="target_date_input")
 target_count = st.sidebar.selectbox("이번 주 목표 횟수", options=[0, 1, 2], index=2, key="target_count_select")
@@ -393,23 +433,16 @@ if st.sidebar.button("🌸 목표 조정 등록", key="target_submit_button"):
 
         updated_targets = pd.concat([targets_data, new_target], ignore_index=True)
         conn.update(worksheet=EXCEPTIONS_WS, data=updated_targets)
-
         st.sidebar.success("목표 조정이 등록되었습니다.")
         st.rerun()
 
 
 st.markdown("""
 <div class="custom-hero">
-    <div class="mascot-left">🐶</div>
-    <div class="mascot-right">🦌</div>
-    <div style="text-align:center;">
-        <span class="hero-chip">🌴 작은 습관이 큰 변화를 만들어요! 🫧</span>
-    </div>
-    <h1>💪 오늘의 운동 완료 인증</h1>
-    <p>❗ 기본 목표: 주 3일 30분 이상 운동완료 ❗</p>
-    <p>❗ 미인증시: 벌금 1000원 ❗ ⭐ 매주 일요일 정산 ⭐</p>
-    <p>🚫 병가, 여행, 모임, 경조사, 생리 등 사유 발생 시 목표 횟수 조정 가능 🚫</p>
-    <div class="wave">🌊 🐚 ⭐ 🏖️ 🍉 🫧</div>
+    <div class="hero-title">💪 오늘의 운동 완료 인증</div>
+    <div class="hero-text-box">❗ 기본 목표: 주 3일 30분 이상 운동완료 ❗</div>
+    <div class="hero-text-box">❗ 미인증시: 벌금 1000원 ❗ ⭐ 매주 일요일 정산 ⭐</div>
+    <div class="hero-text-box">🚫 병가, 여행, 모임, 경조사, 생리 등 사유 발생 시 목표 횟수 조정 가능 🚫</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -552,10 +585,7 @@ with report_col:
                             target_value = 3
 
                         memo_value = target_row["memo"]
-                        if pd.notnull(memo_value) and str(memo_value).strip() != "":
-                            memo_text = f" / {memo_value}"
-                        else:
-                            memo_text = ""
+                        memo_text = f" / {memo_value}" if pd.notnull(memo_value) and str(memo_value).strip() != "" else ""
 
                         if target_value == 0:
                             st.write(f"- **{target_row['name']}**: 인증 제외 / {target_row['reason']}{memo_text}")
@@ -572,6 +602,16 @@ with report_col:
                     st.write("🎉 **이번 주는 둘 다 정산 기준 통과!**")
                 else:
                     st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
+
+                if rj_float_b64:
+                    st.markdown(
+                        f"""
+                        <div class="rj-decoration">
+                            <img src="data:image/png;base64,{rj_float_b64}">
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
                 st.divider()
 
@@ -633,18 +673,9 @@ with report_col:
                                                 value=str(row["comment"]) if pd.notnull(row["comment"]) else ""
                                             )
 
-                                            edit_workout_url_1 = st.text_input(
-                                                "🏠💪 홈트 유튜브 링크 1 수정",
-                                                value=existing_link_1
-                                            )
-                                            edit_workout_url_2 = st.text_input(
-                                                "🏠💪 홈트 유튜브 링크 2 수정",
-                                                value=existing_link_2
-                                            )
-                                            edit_workout_url_3 = st.text_input(
-                                                "🏠💪 홈트 유튜브 링크 3 수정",
-                                                value=existing_link_3
-                                            )
+                                            edit_workout_url_1 = st.text_input("🏠💪 홈트 유튜브 링크 1 수정", value=existing_link_1)
+                                            edit_workout_url_2 = st.text_input("🏠💪 홈트 유튜브 링크 2 수정", value=existing_link_2)
+                                            edit_workout_url_3 = st.text_input("🏠💪 홈트 유튜브 링크 3 수정", value=existing_link_3)
 
                                             edit_uploaded_files = st.file_uploader(
                                                 "새 인증 사진으로 교체",

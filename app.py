@@ -146,7 +146,7 @@ def render_month_calendar(df):
         st.info("달력에 표시할 기록이 없습니다.")
         return
 
-    st.subheader("📅 월간 리포")
+    st.subheader("📅 월간 리포트")
 
     selected_month = st.date_input(
         "달력 기준 월 선택",

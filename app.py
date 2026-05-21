@@ -15,6 +15,27 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] {
+    display: block !important;
+    visibility: visible !important;
+    width: 18rem !important;
+    min-width: 18rem !important;
+}
+
+section[data-testid="stSidebar"] > div {
+    display: block !important;
+    visibility: visible !important;
+}
+
+button[kind="header"] {
+    display: block !important;
+    visibility: visible !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 ASSET_DIR = Path("assets")
 DEER_SURF = ASSET_DIR / "deer_surf.png"
 RJ_FLOAT = ASSET_DIR / "rj_float.png"
@@ -47,10 +68,6 @@ st.markdown(f"""
 <style>
 header[data-testid="stHeader"] {{
     background: transparent;
-}}
-
-div[data-testid="stToolbar"] {{
-    visibility: hidden;
 }}
 
 div[data-testid="stDecoration"] {{

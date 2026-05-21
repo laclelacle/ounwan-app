@@ -11,6 +11,31 @@ st.set_page_config(page_title="오운완 인증💪", page_icon="🏋️‍♀�
 
 st.markdown("""
 <style>
+header[data-testid="stHeader"] {
+    background: transparent;
+    height: 0rem;
+}
+
+div[data-testid="stToolbar"] {
+    display: none;
+}
+
+div[data-testid="stDecoration"] {
+    display: none;
+}
+
+.block-container {
+    padding-top: 1rem;
+}
+
+.stApp {
+    background: linear-gradient(180deg, #fff0f6 0%, #f8f0ff 100%);
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
 
 /* 전체 배경 */
 .stApp {

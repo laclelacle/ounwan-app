@@ -34,6 +34,7 @@ ASSET_DIR = Path("assets")
 DEER_SURF = ASSET_DIR / "deer_surf.png"
 RJ_FLOAT = ASSET_DIR / "rj_float.png"
 SUMMER_BANNER = ASSET_DIR / "summer_banner.png"
+SUMMER_BANNER_MOBILE = ASSET_DIR / "summer_banner_mobile.png"
 
 RECORDS_WS = "시트1"
 EXCEPTIONS_WS = "exceptions"
@@ -56,6 +57,7 @@ def img_to_base64(path):
 deer_surf_b64 = img_to_base64(DEER_SURF)
 rj_float_b64 = img_to_base64(RJ_FLOAT)
 summer_banner_b64 = img_to_base64(SUMMER_BANNER)
+summer_banner_mobile_b64 = img_to_base64(SUMMER_BANNER_MOBILE)
 
 
 st.markdown(f"""
@@ -159,6 +161,7 @@ div[data-baseweb="select"] > div {{
     justify-content: center;
 }}
 
+
 .hero-text-box {{
     background: rgba(255,255,255,0.72);
     padding: 14px 28px;
@@ -167,6 +170,29 @@ div[data-baseweb="select"] > div {{
     color: #073b73;
     font-weight: 900;
     box-shadow: 0 4px 12px rgba(64,151,198,0.12);
+}}
+
+@media (max-width: 768px) {{
+    .custom-hero {{
+        background-image:
+            linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25)),
+            url("data:image/png;base64,{summer_banner_mobile_b64}");
+        background-size: cover;
+        background-position: center bottom;
+        min-height: 620px;
+        padding: 28px 16px;
+    }}
+
+    .hero-title {{
+        font-size: 32px;
+        margin-top: 20px;
+    }}
+
+    .hero-text-box {{
+        font-size: 13px;
+        padding: 9px 14px;
+        border-radius: 18px;
+    }}
 }}
 
 .hero-title {{

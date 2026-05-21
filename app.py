@@ -43,12 +43,19 @@ rj_float_b64 = img_to_base64(RJ_FLOAT)
 summer_banner_b64 = img_to_base64(SUMMER_BANNER)
 
 
-st.markdown(f"""
+st.markdown("""
 <style>
 header[data-testid="stHeader"] {
     background: transparent;
     height: 3rem;
 }
+
+div[data-testid="stToolbar"],
+div[data-testid="stDecoration"] {
+    display: none;
+}
+</style>
+""", unsafe_allow_html=True)
 
 div[data-testid="stToolbar"],
 div[data-testid="stDecoration"] {

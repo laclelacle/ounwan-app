@@ -54,6 +54,15 @@ def split_images(image_text):
     return [image_text]
 
 
+def render_images(image_text):
+    images = split_images(image_text)
+    for img in images:
+        try:
+            st.image(base64.b64decode(img), use_container_width=True)
+        except Exception:
+            st.caption("⚠️ 이미지를 불러올 수 없습니다.")
+
+
 def combine_links(*links):
     return "\n".join([link.strip() for link in links if link and link.strip() != ""])
 
@@ -271,11 +280,6 @@ if st.sidebar.button("목표 조정 등록", key="target_submit_button"):
         st.sidebar.success("목표 조정이 등록되었습니다.")
         st.rerun()
 
-
-st.image(
-    "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=80",
-    use_container_width=True
-)
 
 st.title("💪 오늘의 운동 완료 인증")
 st.write("❗기본 목표: 주 3일 30분 이상 운동완료❗")

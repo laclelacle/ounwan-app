@@ -84,11 +84,11 @@ button[kind="header"] {{
 
 section[data-testid="stSidebar"] {{
     background:
-        linear-gradient(180deg, rgba(225,245,255,0.95), rgba(255,244,249,0.95)),
+        linear-gradient(180deg, rgba(225,245,255,0.78), rgba(255,244,249,0.78)),
         url("data:image/png;base64,{deer_surf_b64}");
     background-repeat: no-repeat;
     background-position: bottom center;
-    background-size: 95%;
+    background-size: contain;
     border-right: 1px solid #c7eaff;
 }}
 

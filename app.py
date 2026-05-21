@@ -54,15 +54,6 @@ def split_images(image_text):
     return [image_text]
 
 
-def render_images(image_text):
-    images = split_images(image_text)
-    for img in images:
-        try:
-            st.image(base64.b64decode(img), use_container_width=True)
-        except Exception:
-            st.caption("⚠️ 이미지를 불러올 수 없습니다.")
-
-
 def combine_links(*links):
     return "\n".join([link.strip() for link in links if link and link.strip() != ""])
 

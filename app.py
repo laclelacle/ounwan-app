@@ -98,6 +98,12 @@ def get_required_count(name, week_key, targets_df):
         return 3
 
 
+def safe_progress(count, required):
+    if required == 0:
+        return 1.0
+    return min(count / required, 1.0)
+
+
 def get_records_data():
     try:
         df = conn.read(worksheet=RECORDS_WS, ttl=0)
@@ -275,6 +281,11 @@ if st.sidebar.button("목표 조정 등록", key="target_submit_button"):
         st.rerun()
 
 
+st.image(
+    "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=80",
+    use_container_width=True
+)
+
 st.title("💪 오늘의 운동 완료 인증")
 st.write("❗기본 목표: 주 3일 30분 이상 운동완료❗")
 st.write("❗미인증시: 벌금 1000원❗⭐매주 일요일 정산⭐")
@@ -387,6 +398,22 @@ with report_col:
                     f"📊 **이번 주 인증 현황**\n\n"
                     f"💎 **가은**: {gaeun_status}  |  🆑️ **소현**: {sohyeon_status}"
                 )
+
+                st.write("💎 가은 목표 달성률")
+                if gaeun_required == 0:
+                    st.progress(1.0)
+                    st.caption("이번 주 인증 제외")
+                else:
+                    st.progress(safe_progress(gaeun_count, gaeun_required))
+                    st.caption(f"{gaeun_count}/{gaeun_required}회 완료")
+
+                st.write("🆑️ 소현 목표 달성률")
+                if sohyeon_required == 0:
+                    st.progress(1.0)
+                    st.caption("이번 주 인증 제외")
+                else:
+                    st.progress(safe_progress(sohyeon_count, sohyeon_required))
+                    st.caption(f"{sohyeon_count}/{sohyeon_required}회 완료")
 
                 if not week_targets.empty:
                     st.warning("🎯 **이번 주 목표 조정 내역이 있습니다.**")

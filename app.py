@@ -146,7 +146,7 @@ def render_month_calendar(df):
         st.info("달력에 표시할 기록이 없습니다.")
         return
 
-    st.subheader("📅 월간 오운완 달력")
+    st.subheader("📅 월간 리포")
 
     selected_month = st.date_input(
         "달력 기준 월 선택",
@@ -330,7 +330,7 @@ with st.form("upload_form", clear_on_submit=True):
 
 st.divider()
 
-st.header("🗓️ 주간 오운완 리포트")
+st.header("🗓️ 주간 리포트")
 
 calendar_col, report_col = st.columns([1, 1.2])
 

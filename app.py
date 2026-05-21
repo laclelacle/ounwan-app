@@ -47,12 +47,18 @@ st.markdown(f"""
 <style>
 header[data-testid="stHeader"] {{
     background: transparent;
-    height: 3rem;
 }}
 
-div[data-testid="stToolbar"],
+div[data-testid="stToolbar"] {{
+    visibility: hidden;
+}}
+
 div[data-testid="stDecoration"] {{
     display: none;
+}}
+
+button[kind="header"] {{
+    visibility: visible !important;
 }}
 
 .stApp {{

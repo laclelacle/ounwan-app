@@ -17,12 +17,6 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-section[data-testid="stSidebar"] {
-    display: block !important;
-    visibility: visible !important;
-    width: 18rem !important;
-    min-width: 18rem !important;
-}
 
 section[data-testid="stSidebar"] > div {
     display: block !important;

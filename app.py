@@ -32,7 +32,7 @@ button[kind="header"] {
 
 ASSET_DIR = Path("assets")
 DEER_SURF = ASSET_DIR / "deer_surf.png"
-RJ_FLOAT = ASSET_DIR / "rj_float.png"
+RJ_FLOAT = ASSET_DIR / "rj_float_transparency.png"
 SUMMER_BANNER = ASSET_DIR / "summer_banner.png"
 SUMMER_BANNER_MOBILE = ASSET_DIR / "summer_banner_mobile.png"
 BACKGROUND = ASSET_DIR / "background.png"
@@ -189,7 +189,16 @@ div[data-baseweb="select"] > div {{
         background-position: center top;
         background-attachment: fixed;
     }}
-}}
+
+    .custom-hero {{
+        background-image:
+            linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25)),
+            url("data:image/png;base64,{summer_banner_mobile_b64}");
+        background-size: cover;
+        background-position: center bottom;
+        min-height: 620px;
+        padding: 28px 16px;
+    }}
 
     .hero-title {{
         font-size: 32px;
@@ -267,6 +276,26 @@ div[data-baseweb="select"] > div {{
 
 .rj-decoration img {{
     width: 160px;
+}}
+
+.rj-decoration img {{
+    width: 160px;
+}}
+
+.report-title-row {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}}
+
+.report-title-row h2 {{
+    margin: 0;
+}}
+
+.report-title-row img {{
+    width: 90px;
+    height: auto;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -401,7 +430,15 @@ def render_month_calendar(df):
         st.info("달력에 표시할 기록이 없습니다.")
         return
 
-    st.subheader("🌞 월간 리포트 🌴")
+    st.markdown(
+    f"""
+    <div class="report-title-row">
+        <h2>🌞 월간 리포트 🌴</h2>
+        <img src="data:image/png;base64,{rj_float_b64}">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
     selected_month = st.date_input(
         "달력 기준 월 선택",
@@ -564,7 +601,15 @@ with calendar_col:
     render_month_calendar(existing_data)
 
 with report_col:
-    st.subheader("📋 주간 기록 리스트 ⭐")
+    st.markdown(
+    f"""
+    <div class="report-title-row">
+        <h2>📋 주간 기록 리스트 ⭐</h2>
+        <img src="data:image/png;base64,{rj_float_b64}">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
     week_keys = set()
 

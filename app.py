@@ -43,24 +43,13 @@ rj_float_b64 = img_to_base64(RJ_FLOAT)
 summer_banner_b64 = img_to_base64(SUMMER_BANNER)
 
 
-st.markdown("""
+st.markdown(f"""
 <style>
-header[data-testid="stHeader"] {
+header[data-testid="stHeader"] {{
     background: transparent;
     height: 3rem;
-}
+}}
 
-div[data-testid="stToolbar"],
-div[data-testid="stDecoration"] {
-    display: none;
-}
-</style>
-""", unsafe_allow_html=True)
-
-div[data-testid="stToolbar"],
-div[data-testid="stDecoration"] {
-    display: none;
-}
 div[data-testid="stToolbar"],
 div[data-testid="stDecoration"] {{
     display: none;
@@ -155,7 +144,6 @@ div[data-baseweb="select"] > div {{
 
 .hero-text-box {{
     background: rgba(255,255,255,0.72);
-    backdrop-filter: blur(2px);
     padding: 14px 28px;
     border-radius: 999px;
     margin: 8px;
@@ -222,12 +210,12 @@ div[data-baseweb="select"] > div {{
 
 .rj-decoration {{
     text-align: right;
-    margin-top: -80px;
+    margin-top: -70px;
     margin-bottom: -10px;
 }}
 
 .rj-decoration img {{
-    width: 190px;
+    width: 160px;
 }}
 </style>
 """, unsafe_allow_html=True)

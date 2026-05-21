@@ -9,6 +9,80 @@ import calendar
 
 st.set_page_config(page_title="오운완 인증💪", page_icon="🏋️‍♀️", layout="wide")
 
+st.markdown("""
+<style>
+
+/* 전체 배경 */
+.stApp {
+    background: linear-gradient(
+        180deg,
+        #fff0f6 0%,
+        #f8f0ff 100%
+    );
+}
+
+/* 메인 컨테이너 */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* 카드 스타일 */
+div[data-testid="stForm"] {
+    background: white;
+    padding: 25px;
+    border-radius: 25px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    border: 2px solid #ffd6e7;
+}
+
+/* 사이드바 */
+section[data-testid="stSidebar"] {
+    background: #ffeef5;
+}
+
+/* 버튼 */
+.stButton>button {
+    background: linear-gradient(
+        90deg,
+        #ff8fab,
+        #cdb4db
+    );
+    color: white;
+    border-radius: 15px;
+    border: none;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+}
+
+/* 버튼 hover */
+.stButton>button:hover {
+    background: linear-gradient(
+        90deg,
+        #ff5d8f,
+        #b388eb
+    );
+    color: white;
+}
+
+/* 입력창 */
+.stTextInput input,
+.stTextArea textarea,
+.stSelectbox div,
+.stDateInput input {
+    border-radius: 12px !important;
+}
+
+/* expander */
+.streamlit-expanderHeader {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ff5d8f;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 RECORDS_WS = "시트1"

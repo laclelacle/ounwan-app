@@ -7,7 +7,7 @@ from PIL import Image
 import io
 import calendar
 
-st.set_page_config(page_title="오운완 인증💪", page_icon="🏋️‍♀️", layout="wide")
+st.set_page_config(page_title="오운완 인증💪", page_icon="🏖️", layout="wide")
 
 st.markdown("""
 <style>
@@ -15,96 +15,153 @@ header[data-testid="stHeader"] {
     background: transparent;
     height: 0rem;
 }
-
-div[data-testid="stToolbar"] {
+div[data-testid="stToolbar"], div[data-testid="stDecoration"] {
     display: none;
 }
-
-div[data-testid="stDecoration"] {
-    display: none;
-}
-
-.block-container {
-    padding-top: 1rem;
-}
-
 .stApp {
-    background: linear-gradient(180deg, #fff0f6 0%, #f8f0ff 100%);
+    background: linear-gradient(180deg, #eaf8ff 0%, #fff8f0 45%, #fff1f7 100%);
 }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-
-/* 전체 배경 */
-.stApp {
-    background: linear-gradient(
-        180deg,
-        #fff0f6 0%,
-        #f8f0ff 100%
-    );
-}
-
-/* 메인 컨테이너 */
 .block-container {
-    padding-top: 2rem;
+    padding-top: 1.2rem;
     padding-bottom: 2rem;
 }
-
-/* 카드 스타일 */
-div[data-testid="stForm"] {
-    background: white;
-    padding: 25px;
-    border-radius: 25px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
-    border: 2px solid #ffd6e7;
-}
-
-/* 사이드바 */
 section[data-testid="stSidebar"] {
-    background: #ffeef5;
+    background: linear-gradient(180deg, #e3f5ff 0%, #fff0f6 100%);
+    border-right: 1px solid #d7efff;
 }
-
-/* 버튼 */
+h1, h2, h3 {
+    color: #113b6d;
+    font-weight: 800;
+}
+div[data-testid="stForm"] {
+    background: rgba(255,255,255,0.92);
+    padding: 28px;
+    border-radius: 26px;
+    box-shadow: 0 8px 25px rgba(92, 155, 200, 0.18);
+    border: 1.5px solid #bfe8ff;
+}
+div[data-testid="stExpander"] {
+    background: rgba(255,255,255,0.92);
+    border-radius: 20px;
+    border: 1px solid #cfeeff;
+    box-shadow: 0 5px 18px rgba(92, 155, 200, 0.12);
+    margin-bottom: 12px;
+}
 .stButton>button {
-    background: linear-gradient(
-        90deg,
-        #ff8fab,
-        #cdb4db
-    );
+    background: linear-gradient(90deg, #65c7f7, #ff9eb5);
     color: white;
-    border-radius: 15px;
     border: none;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-weight: 800;
+    padding: 0.55rem 1.2rem;
 }
-
-/* 버튼 hover */
 .stButton>button:hover {
-    background: linear-gradient(
-        90deg,
-        #ff5d8f,
-        #b388eb
-    );
+    background: linear-gradient(90deg, #42b7f5, #ff7fa0);
     color: white;
+    transform: scale(1.02);
 }
-
-/* 입력창 */
 .stTextInput input,
 .stTextArea textarea,
-.stSelectbox div,
 .stDateInput input {
-    border-radius: 12px !important;
+    border-radius: 14px !important;
+    border: 1px solid #cfeeff !important;
+    background-color: #ffffff !important;
 }
-
-/* expander */
-.streamlit-expanderHeader {
-    font-size: 18px;
+div[data-baseweb="select"] > div {
+    border-radius: 14px !important;
+    border-color: #cfeeff !important;
+}
+.custom-hero {
+    background: linear-gradient(135deg, #b9ecff 0%, #fff5d6 48%, #ffd6e7 100%);
+    border-radius: 32px;
+    padding: 34px 36px;
+    margin-bottom: 28px;
+    box-shadow: 0 10px 30px rgba(64, 151, 198, 0.18);
+    border: 2px solid rgba(255,255,255,0.9);
+    position: relative;
+    overflow: hidden;
+}
+.custom-hero h1 {
+    text-align: center;
+    font-size: 56px;
+    margin: 0 0 10px 0;
+    color: #174574;
+}
+.custom-hero p {
+    text-align: center;
+    font-size: 19px;
+    margin: 7px 0;
+    color: #345;
+    font-weight: 600;
+}
+.mascot-left {
+    position: absolute;
+    left: 30px;
+    top: 28px;
+    font-size: 78px;
+}
+.mascot-right {
+    position: absolute;
+    right: 32px;
+    top: 34px;
+    font-size: 76px;
+}
+.hero-chip {
+    display: inline-block;
+    background: rgba(255,255,255,0.7);
+    padding: 8px 18px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    color: #2f6f9f;
+    font-weight: 800;
+}
+.wave {
+    font-size: 24px;
+    text-align: center;
+    margin-top: 16px;
+}
+.calendar-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 5px;
+    table-layout: fixed;
+}
+.calendar-table th {
+    background-color: #dff3ff;
+    padding: 9px;
+    text-align: center;
+    font-size: 13px;
+    border-radius: 12px;
+    color: #174574;
+}
+.calendar-table td {
+    border: 1px solid #d7efff;
+    background: rgba(255,255,255,0.85);
+    vertical-align: top;
+    height: 108px;
+    padding: 7px;
+    font-size: 13px;
+    border-radius: 14px;
+}
+.calendar-day {
     font-weight: bold;
-    color: #ff5d8f;
+    margin-bottom: 5px;
+    color: #174574;
 }
-
+.calendar-out {
+    color: #bbb;
+    background-color: #f7fbff !important;
+}
+.workout-badge {
+    display: block;
+    margin-top: 4px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #e2f4ff, #ffe3ec);
+    font-size: 12px;
+    color: #174574;
+    font-weight: 700;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -154,8 +211,7 @@ def split_images(image_text):
 
 
 def render_images(image_text):
-    images = split_images(image_text)
-    for img in images:
+    for img in split_images(image_text):
         try:
             st.image(base64.b64decode(img), use_container_width=True)
         except Exception:
@@ -251,7 +307,7 @@ def render_month_calendar(df):
         st.info("달력에 표시할 기록이 없습니다.")
         return
 
-    st.subheader("📅 월간 리포트")
+    st.subheader("📅 월간 리포트 🌴")
 
     selected_month = st.date_input(
         "달력 기준 월 선택",
@@ -271,42 +327,6 @@ def render_month_calendar(df):
     weeks = cal.monthdatescalendar(year, month)
 
     html = """
-    <style>
-    .calendar-table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-    }
-    .calendar-table th {
-        background-color: #f3f4f6;
-        padding: 8px;
-        text-align: center;
-        font-size: 13px;
-    }
-    .calendar-table td {
-        border: 1px solid #ddd;
-        vertical-align: top;
-        height: 105px;
-        padding: 6px;
-        font-size: 13px;
-    }
-    .calendar-day {
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-    .calendar-out {
-        color: #bbb;
-        background-color: #fafafa;
-    }
-    .workout-badge {
-        display: block;
-        margin-top: 4px;
-        padding: 4px 6px;
-        border-radius: 8px;
-        background-color: #e8f2ff;
-        font-size: 12px;
-    }
-    </style>
     <table class="calendar-table">
     <tr>
         <th>월</th>
@@ -332,14 +352,13 @@ def render_month_calendar(df):
             if not day_df.empty:
                 for name in day_df["name"].unique():
                     count = len(day_df[day_df["name"] == name])
-                    icon = "💎" if name == "가은" else "🆑️"
+                    icon = "🐶" if name == "가은" else "🦌"
                     html += f'<span class="workout-badge">{icon} {name} {count}회</span>'
 
             html += "</td>"
         html += "</tr>"
 
     html += "</table>"
-
     st.markdown(html, unsafe_allow_html=True)
 
 
@@ -347,14 +366,13 @@ existing_data = get_records_data()
 targets_data = get_targets_data()
 
 st.sidebar.header("🎯 주간 목표 조정")
-
 target_user = st.sidebar.selectbox("누구의 목표를 조정하나요?", ["가은", "소현"], key="target_user_select")
 target_date = st.sidebar.date_input("해당 주간 날짜 선택", datetime.date.today(), key="target_date_input")
 target_count = st.sidebar.selectbox("이번 주 목표 횟수", options=[0, 1, 2], index=2, key="target_count_select")
 reason = st.sidebar.selectbox("사유", ["병가", "여행", "모임", "경조사", "생리", "시험 준비", "기타"], key="reason_select")
 memo = st.sidebar.text_input("메모", key="memo_input")
 
-if st.sidebar.button("목표 조정 등록", key="target_submit_button"):
+if st.sidebar.button("🌸 목표 조정 등록", key="target_submit_button"):
     week_key = get_week_start(target_date)
 
     already_exists = (
@@ -380,18 +398,29 @@ if st.sidebar.button("목표 조정 등록", key="target_submit_button"):
         st.rerun()
 
 
-st.title("💪 오늘의 운동 완료 인증")
-st.write("❗기본 목표: 주 3일 30분 이상 운동완료❗")
-st.write("❗미인증시: 벌금 1000원❗⭐매주 일요일 정산⭐")
-st.write("🚫병가, 여행, 모임, 경조사, 생리 등 사유 발생 시 목표 횟수 조정 가능🚫")
-
-st.divider()
+st.markdown("""
+<div class="custom-hero">
+    <div class="mascot-left">🐶</div>
+    <div class="mascot-right">🦌</div>
+    <div style="text-align:center;">
+        <span class="hero-chip">🌴 작은 습관이 큰 변화를 만들어요! 🫧</span>
+    </div>
+    <h1>💪 오늘의 운동 완료 인증</h1>
+    <p>❗ 기본 목표: 주 3일 30분 이상 운동완료 ❗</p>
+    <p>❗ 미인증시: 벌금 1000원 ❗ ⭐ 매주 일요일 정산 ⭐</p>
+    <p>🚫 병가, 여행, 모임, 경조사, 생리 등 사유 발생 시 목표 횟수 조정 가능 🚫</p>
+    <div class="wave">🌊 🐚 ⭐ 🏖️ 🍉 🫧</div>
+</div>
+""", unsafe_allow_html=True)
 
 with st.form("upload_form", clear_on_submit=True):
-    st.header("오늘의 운동 인증하기")
+    st.header("🌺 오늘의 운동 인증하기")
 
-    user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"], key="upload_user")
-    date = st.date_input("날짜", datetime.date.today(), key="upload_date")
+    col1, col2 = st.columns(2)
+    with col1:
+        user_name = st.selectbox("누가 운동했나요?", ["가은", "소현"], key="upload_user")
+    with col2:
+        date = st.date_input("날짜", datetime.date.today(), key="upload_date")
 
     uploaded_files = st.file_uploader(
         "인증 사진 📸",
@@ -402,11 +431,15 @@ with st.form("upload_form", clear_on_submit=True):
 
     comment = st.text_area("오늘 운동🔥", key="upload_comment")
 
-    workout_url_1 = st.text_input("🏠💪 홈트 유튜브 링크 1", key="upload_url_1")
-    workout_url_2 = st.text_input("🏠💪 홈트 유튜브 링크 2", key="upload_url_2")
-    workout_url_3 = st.text_input("🏠💪 홈트 유튜브 링크 3", key="upload_url_3")
+    link_col1, link_col2, link_col3 = st.columns(3)
+    with link_col1:
+        workout_url_1 = st.text_input("🏠💪 홈트 유튜브 링크 1", key="upload_url_1")
+    with link_col2:
+        workout_url_2 = st.text_input("🏠💪 홈트 유튜브 링크 2", key="upload_url_2")
+    with link_col3:
+        workout_url_3 = st.text_input("🏠💪 홈트 유튜브 링크 3", key="upload_url_3")
 
-    submitted = st.form_submit_button("인증 완료!")
+    submitted = st.form_submit_button("✅ 인증 완료!")
 
     if submitted:
         if uploaded_files:
@@ -443,7 +476,7 @@ with calendar_col:
     render_month_calendar(existing_data)
 
 with report_col:
-    st.subheader("📋 주간 기록 리스트")
+    st.subheader("📋 주간 기록 리스트 ⭐")
 
     week_keys = set()
 
@@ -490,10 +523,10 @@ with report_col:
 
                 st.info(
                     f"📊 **이번 주 인증 현황**\n\n"
-                    f"💎 **가은**: {gaeun_status}  |  🆑️ **소현**: {sohyeon_status}"
+                    f"🐶 **가은**: {gaeun_status}  |  🦌 **소현**: {sohyeon_status}"
                 )
 
-                st.write("💎 가은 목표 달성률")
+                st.write("🐶 가은 목표 달성률")
                 if gaeun_required == 0:
                     st.progress(1.0)
                     st.caption("이번 주 인증 제외")
@@ -501,7 +534,7 @@ with report_col:
                     st.progress(safe_progress(gaeun_count, gaeun_required))
                     st.caption(f"{gaeun_count}/{gaeun_required}회 완료")
 
-                st.write("🆑️ 소현 목표 달성률")
+                st.write("🦌 소현 목표 달성률")
                 if sohyeon_required == 0:
                     st.progress(1.0)
                     st.caption("이번 주 인증 제외")
@@ -535,10 +568,7 @@ with report_col:
                             st.success("목표 조정이 취소되었습니다.")
                             st.rerun()
 
-                gaeun_done = gaeun_count >= gaeun_required
-                sohyeon_done = sohyeon_count >= sohyeon_required
-
-                if gaeun_done and sohyeon_done:
+                if gaeun_count >= gaeun_required and sohyeon_count >= sohyeon_required:
                     st.write("🎉 **이번 주는 둘 다 정산 기준 통과!**")
                 else:
                     st.write("🏃 **목표까지 조금만 더! 일요일 정산 전까지 파이팅!**")
@@ -557,7 +587,7 @@ with report_col:
                             day_df = week_df[week_df["date"] == d]
 
                             for idx, row in day_df.iterrows():
-                                icon = "💎" if row["name"] == "가은" else "🆑️"
+                                icon = "🐶" if row["name"] == "가은" else "🦌"
 
                                 with st.chat_message("user", avatar=icon):
                                     st.write(f"**{row['name']}의 기록**")

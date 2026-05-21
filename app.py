@@ -352,7 +352,7 @@ def render_month_calendar(df):
             if not day_df.empty:
                 for name in day_df["name"].unique():
                     count = len(day_df[day_df["name"] == name])
-                    icon = "🐶" if name == "가은" else "🦌"
+                    icon = "💎" if name == "가은" else "🆑️"
                     html += f'<span class="workout-badge">{icon} {name} {count}회</span>'
 
             html += "</td>"

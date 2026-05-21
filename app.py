@@ -8,7 +8,7 @@ import io
 import calendar
 from pathlib import Path
 
-st.set_page_config(page_title="오운완 인증💪", page_icon="🏖️", layout="wide")
+st.set_page_config(page_title="오운완 인증💪", page_icon="🏖️", layout="wide", initial_sidebar_state="expanded")
 
 ASSET_DIR = Path("assets")
 DEER_SURF = ASSET_DIR / "deer_surf.png"

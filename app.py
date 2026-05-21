@@ -412,7 +412,7 @@ def render_month_calendar(df):
             if not day_df.empty:
                 for name in day_df["name"].unique():
                     count = len(day_df[day_df["name"] == name])
-                    icon = "🐶" if name == "가은" else "🦌"
+                    icon = "💎" if name == "가은" else "🦌"
                     html += f'<span class="workout-badge">{icon} {name} {count}회</span>'
 
             html += "</td>"
@@ -577,10 +577,10 @@ with report_col:
 
                 st.info(
                     f"📊 **이번 주 인증 현황**\n\n"
-                    f"🐶 **가은**: {gaeun_status}  |  🦌 **소현**: {sohyeon_status}"
+                    f"💎 **가은**: {gaeun_status}  |  🆑️ **소현**: {sohyeon_status}"
                 )
 
-                st.write("🐶 가은 목표 달성률")
+                st.write("💎 가은 목표 달성률")
                 if gaeun_required == 0:
                     st.progress(1.0)
                     st.caption("이번 주 인증 제외")
@@ -588,7 +588,7 @@ with report_col:
                     st.progress(safe_progress(gaeun_count, gaeun_required))
                     st.caption(f"{gaeun_count}/{gaeun_required}회 완료")
 
-                st.write("🦌 소현 목표 달성률")
+                st.write("🆑️ 소현 목표 달성률")
                 if sohyeon_required == 0:
                     st.progress(1.0)
                     st.caption("이번 주 인증 제외")
@@ -648,7 +648,7 @@ with report_col:
                             day_df = week_df[week_df["date"] == d]
 
                             for idx, row in day_df.iterrows():
-                                icon = "🐶" if row["name"] == "가은" else "🦌"
+                                icon = "💎" if row["name"] == "가은" else "🆑️"
 
                                 with st.chat_message("user", avatar=icon):
                                     st.write(f"**{row['name']}의 기록**")
